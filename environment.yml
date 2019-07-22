@@ -1,0 +1,15 @@
+name: coralclassify
+channels:
+  - anaconda
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=
+  - numpy=
+  - tqdm=4.28.1
+  - scikit-image=0.14.0
+  - numba=
+  - opencv=
+  - pytorch=
+  - torchvision=
+  - scikit-learn=
