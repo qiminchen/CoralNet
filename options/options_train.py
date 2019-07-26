@@ -40,6 +40,8 @@ def add_general_arguments(parser):
     # Network name
     parser.add_argument('--net', type=str, required=True,
                         help='network type to use')
+    parser.add_argument('--pretrained', action='store_true',
+                        help='using pretrained model or not')
 
     # Optimizer
     parser.add_argument('--optim', type=str, default='adam',
