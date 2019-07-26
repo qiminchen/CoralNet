@@ -2,9 +2,11 @@ import sys
 import os
 import time
 import torch
+import pandas as pd
 from options import options_train
 import datasets
 import models
+from models import resnet50
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
 
@@ -70,3 +72,37 @@ print(str_verbose, "Logging directory set to: %s" % logdir)
 print(str_stage, "Setting up loggers")
 
 ###################################################
+
+print(str_stage, "Setting up models")
+if opt.net == 'resnet50':
+    model = resnet50.resnet50(opt.pretrained)
+print("# model parameters: {:,d}".format(
+    sum(p.numel() for p in model.parameters() if p.requires_grad)))
+
+initial_epoch = 1
+if opt.resume != 0:
+    if opt.resume == -1:
+        net_filename = os.path.join(logdir, 'checkpoint.pt')
+    elif opt.resume == -2:
+        net_filename = os.path.join(logdir, 'best.pt')
+    else:
+        raise NotImplementedError(opt.resume)
+    if not os.path.isfile(net_filename):
+        print(str_warning, ("Network file not found for opt.resume=%d. "
+                            "Starting from scratch") % opt.resume)
+    else:
+        additional_values = model.load_state_dict(net_filename, load_optimizer='auto')
+        try:
+            initial_epoch += additional_values['epoch']
+        except KeyError as err:
+            # Old saved model does not have epoch as additional values
+            epoch_loss_csv = os.path.join(logdir, 'epoch_loss.csv')
+            if opt.resume == -1:
+                try:
+                    initial_epoch += pd.read_csv(epoch_loss_csv)['epoch'].max()
+                except pd.errors.ParserError:
+                    with open(epoch_loss_csv, 'r') as f:
+                        lines = f.readlines()
+                    initial_epoch += max([int(l.split(',')[0]) for l in lines[1:]])
+            else:
+                initial_epoch += opt.resume
