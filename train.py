@@ -4,8 +4,7 @@ import time
 import torch
 import pandas as pd
 from options import options_train
-import datasets
-import models
+from datasets import coralnet
 from models import resnet50
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
@@ -18,13 +17,13 @@ opt, unique_opt_params = options_train.parse()
 print(opt)
 
 ###################################################
-'''
+
 print(str_stage, "Setting device")
 if opt.gpu == '-1':
     device = torch.device('cpu')
 else:
     device = torch.device('cuda:0')
-'''
+
 ###################################################
 
 print(str_stage, "Setting up logging directory")
@@ -69,15 +68,12 @@ print(str_verbose, "Logging directory set to: %s" % logdir)
 
 ###################################################
 
-print(str_stage, "Setting up loggers")
-
-###################################################
-
 print(str_stage, "Setting up models")
 if opt.net == 'resnet50':
     model = resnet50.resnet50(opt.pretrained)
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
+model = model.to(device)
 
 initial_epoch = 1
 if opt.resume != 0:
@@ -106,3 +102,45 @@ if opt.resume != 0:
                     initial_epoch += max([int(l.split(',')[0]) for l in lines[1:]])
             else:
                 initial_epoch += opt.resume
+
+###################################################
+
+print(str_stage, "Setting up data loaders")
+start_time = time.time()
+dataset_train = coralnet.Dataset(opt, mode='train')
+dataset_valid = coralnet.Dataset(opt, mode='valid')
+dataloader_train = torch.utils.data.DataLoader(
+    dataset_train,
+    batch_size=opt.batch_size,
+    shuffle=True,
+    num_workers=opt.workers,
+    pin_memory=True,
+    drop_last=True
+)
+dataloader_valid = torch.utils.data.DataLoader(
+    dataset_valid,
+    batch_size=opt.batch_size,
+    num_workers=opt.workers,
+    pin_memory=True,
+    drop_last=True,
+    shuffle=False
+)
+print(str_verbose, "Time spent in data IO initialization: %.2fs" %
+      (time.time() - start_time))
+print(str_verbose, "# training points: " + str(len(dataset_train)))
+print(str_verbose, "# training batches per epoch: " + str(len(dataloader_train)))
+print(str_verbose, "# test batches: " + str(len(dataloader_valid)))
+
+###################################################
+
+print(str_stage, "Setting up optimizer")
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
+                             weight_decay=opt.wdecay)
+lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecaystep,
+                                               gamma=opt.lrdecay)
+
+###################################################
+
+print(str_stage, "Start training")
+assert opt.epoch > 0
