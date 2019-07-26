@@ -1,5 +1,6 @@
 import sys
 import os
+import csv
 import time
 import torch
 import pandas as pd
@@ -108,11 +109,13 @@ if opt.resume != 0:
 
 print(str_stage, "Setting up data loaders")
 start_time = time.time()
-dataset_train = coralnet.Dataset(opt, mode='train')
-dataset_valid = coralnet.Dataset(opt, mode='valid')
+dataset = {
+    'train': coralnet.Dataset(opt, mode='train'),
+    'valid': coralnet.Dataset(opt, mode='valid')
+}
 dataloaders = {
     'train': torch.utils.data.DataLoader(
-        dataset_train,
+        dataset['train'],
         batch_size=opt.batch_size,
         shuffle=True,
         num_workers=opt.workers,
@@ -120,7 +123,7 @@ dataloaders = {
         drop_last=True
     ),
     'valid': torch.utils.data.DataLoader(
-        dataset_valid,
+        dataset['valid'],
         batch_size=opt.batch_size,
         num_workers=opt.workers,
         pin_memory=True,
@@ -156,23 +159,30 @@ while initial_epoch <= opt.epoch:
             model.train()
         else:
             model.eval()
-
+        # Batch loss and batch accuracy
         running_loss = 0.0
         running_accuracy = 0
-
+        # Progress bar
         data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]))
         for inputs, labels in data:
             inputs = inputs.to(device)
             labels = labels.to(device)
-
             optimizer.zero_grad()
-
+            # track history if only in train
             with torch.set_grad_enabled(phase == 'train'):
                 outputs = model(inputs)
-                _, preds = torch.max(outputs, 1)
+                _, predicts = torch.max(outputs, 1)
                 loss = criterion(outputs, labels)
-
+                # backward and optimize only if in training phase
                 if phase == 'train':
                     loss.backward()
                     optimizer.step()
+            # statistics
+            running_loss += loss.item() * inputs.size(0)
+            running_accuracy += torch.sum(predicts == labels.data)
+            # updating progress bar
+            data.set_description("{} {}/{}: Loss: {}, Acc: {}".format(
+                phase, initial_epoch, opt.epoch, running_loss / len(dataset[phase]),
+                running_accuracy / len(dataset[phase])))
+        # Save every epoch loss into .csv file
     initial_epoch += 1
