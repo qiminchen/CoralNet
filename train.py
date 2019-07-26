@@ -3,6 +3,7 @@ import os
 import time
 import torch
 import pandas as pd
+from tqdm import tqdm
 from options import options_train
 from datasets import coralnet
 from models import resnet50
@@ -109,27 +110,29 @@ print(str_stage, "Setting up data loaders")
 start_time = time.time()
 dataset_train = coralnet.Dataset(opt, mode='train')
 dataset_valid = coralnet.Dataset(opt, mode='valid')
-dataloader_train = torch.utils.data.DataLoader(
-    dataset_train,
-    batch_size=opt.batch_size,
-    shuffle=True,
-    num_workers=opt.workers,
-    pin_memory=True,
-    drop_last=True
-)
-dataloader_valid = torch.utils.data.DataLoader(
-    dataset_valid,
-    batch_size=opt.batch_size,
-    num_workers=opt.workers,
-    pin_memory=True,
-    drop_last=True,
-    shuffle=False
-)
+dataloaders = {
+    'train': torch.utils.data.DataLoader(
+        dataset_train,
+        batch_size=opt.batch_size,
+        shuffle=True,
+        num_workers=opt.workers,
+        pin_memory=True,
+        drop_last=True
+    ),
+    'valid': torch.utils.data.DataLoader(
+        dataset_valid,
+        batch_size=opt.batch_size,
+        num_workers=opt.workers,
+        pin_memory=True,
+        drop_last=True,
+        shuffle=False
+    ),
+}
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
       (time.time() - start_time))
 print(str_verbose, "# training points: " + str(len(dataset_train)))
-print(str_verbose, "# training batches per epoch: " + str(len(dataloader_train)))
-print(str_verbose, "# test batches: " + str(len(dataloader_valid)))
+print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
+print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
 
 ###################################################
 
@@ -144,3 +147,32 @@ lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecays
 
 print(str_stage, "Start training")
 assert opt.epoch > 0
+
+while initial_epoch <= opt.epoch:
+    epoch_loss = 0
+    for phase in ['train', 'valid']:
+        if phase == 'train':
+            lr_scheduler.step()
+            model.train()
+        else:
+            model.eval()
+
+        running_loss = 0.0
+        running_accuracy = 0
+
+        data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]))
+        for inputs, labels in data:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            optimizer.zero_grad()
+
+            with torch.set_grad_enabled(phase == 'train'):
+                outputs = model(inputs)
+                _, preds = torch.max(outputs, 1)
+                loss = criterion(outputs, labels)
+
+                if phase == 'train':
+                    loss.backward()
+                    optimizer.step()
+    initial_epoch += 1
