@@ -54,6 +54,10 @@ def add_general_arguments(parser):
                         help='beta2 of adam')
     parser.add_argument('--wdecay', type=float, default=0.0,
                         help='weight decay')
+    parser.add_argument('--lrdecay', type=float, default=0.1,
+                        help='learning rate decay')
+    parser.add_argument('--lrdecaystep', type=int, default=10,
+                        help='learning rate decay step size')
 
     # Logging and visualization
     parser.add_argument('--logdir', type=str, default=None,
