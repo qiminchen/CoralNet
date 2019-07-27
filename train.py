@@ -2,12 +2,14 @@ import sys
 import os
 import csv
 import time
+import copy
 import torch
 import pandas as pd
 from tqdm import tqdm
 from options import options_train
 from datasets import coralnet
 from models import resnet50
+import loggers.logger as logger
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
 
@@ -70,15 +72,28 @@ print(str_verbose, "Logging directory set to: %s" % logdir)
 
 ###################################################
 
+print(str_stage, "Setting up loggers")
+csv_logger = logger.CsvLogger(opt, os.path.join(logdir, 'epoch_loss.csv'))
+
+###################################################
+
 print(str_stage, "Setting up models")
 if opt.net == 'resnet50':
     model = resnet50.resnet50(opt.pretrained)
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
-model = model.to(device)
+# model = model.to(device)
 
+model_logger = logger.ModelLogger()
 initial_epoch = 1
-if opt.resume != 0:
+if opt.resume == 0:
+    checkpoint = copy.deepcopy(model.state_dict())
+    best = copy.deepcopy(model.state_dict())
+    model_logger.save_state_dict(checkpoint, filepath=os.path.join(logdir, 'checkpoint.pt'),
+                                 additional_values={'epoch': initial_epoch})
+    model_logger.save_state_dict(best, filepath=os.path.join(logdir, 'best.pt'),
+                                 additional_values={'epoch': initial_epoch})
+else:
     if opt.resume == -1:
         net_filename = os.path.join(logdir, 'checkpoint.pt')
     elif opt.resume == -2:
@@ -89,7 +104,8 @@ if opt.resume != 0:
         print(str_warning, ("Network file not found for opt.resume=%d. "
                             "Starting from scratch") % opt.resume)
     else:
-        additional_values = model.load_state_dict(net_filename, load_optimizer='auto')
+        checkpoint, additional_values = model_logger.load_state_dict(net_filename)
+        model.load_state_dict(checkpoint)
         try:
             initial_epoch += additional_values['epoch']
         except KeyError as err:
@@ -185,4 +201,6 @@ while initial_epoch <= opt.epoch:
                 phase, initial_epoch, opt.epoch, running_loss / len(dataset[phase]),
                 running_accuracy / len(dataset[phase])))
         # Save every epoch loss into .csv file
+        csv_logger.save([phase, initial_epoch, running_loss / len(dataset[phase]),
+                         running_accuracy / len(dataset[phase])])
     initial_epoch += 1
