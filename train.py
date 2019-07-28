@@ -9,7 +9,8 @@ from tqdm import tqdm
 from options import options_train
 from datasets import coralnet
 from models import resnet50
-import loggers.logger as logger
+import loggers.loggers as logger
+import util.util_metric as util_metric
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
 
@@ -84,14 +85,14 @@ print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
 # model = model.to(device)
 
-model_logger = logger.ModelLogger()
+model_logger = logger.ModelLogger(logdir)
 initial_epoch = 1
 if opt.resume == 0:
     checkpoint = copy.deepcopy(model.state_dict())
     best = copy.deepcopy(model.state_dict())
-    model_logger.save_state_dict(checkpoint, filepath=os.path.join(logdir, 'checkpoint.pt'),
+    model_logger.save_state_dict(checkpoint, filename='checkpoint.pt',
                                  additional_values={'epoch': initial_epoch})
-    model_logger.save_state_dict(best, filepath=os.path.join(logdir, 'best.pt'),
+    model_logger.save_state_dict(best, filename='best.pt',
                                  additional_values={'epoch': initial_epoch})
 else:
     if opt.resume == -1:
@@ -149,7 +150,7 @@ dataloaders = {
 }
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
       (time.time() - start_time))
-print(str_verbose, "# training points: " + str(len(dataset_train)))
+print(str_verbose, "# training points: " + str(len(dataset['train'])))
 print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
 print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
 
@@ -166,41 +167,41 @@ lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecays
 
 print(str_stage, "Start training")
 assert opt.epoch > 0
+best_accuracy = 0.0
+running_loss = 0.0
+running_accuracy = 0
 
 while initial_epoch <= opt.epoch:
-    epoch_loss = 0
     for phase in ['train', 'valid']:
         if phase == 'train':
             lr_scheduler.step()
             model.train()
         else:
             model.eval()
-        # Batch loss and batch accuracy
-        running_loss = 0.0
-        running_accuracy = 0
+        # Loss utility
+        metric_util = util_metric.MetricUtil()
         # Progress bar
         data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]))
-        for inputs, labels in data:
+        for i, (inputs, labels) in enumerate(data):
             inputs = inputs.to(device)
             labels = labels.to(device)
             optimizer.zero_grad()
-            # track history if only in train
-            with torch.set_grad_enabled(phase == 'train'):
-                outputs = model(inputs)
-                _, predicts = torch.max(outputs, 1)
-                loss = criterion(outputs, labels)
-                # backward and optimize only if in training phase
-                if phase == 'train':
-                    loss.backward()
-                    optimizer.step()
-            # statistics
-            running_loss += loss.item() * inputs.size(0)
-            running_accuracy += torch.sum(predicts == labels.data)
+            running_loss, running_accuracy = metric_util.compute_metric(
+                model, phase, inputs, labels, criterion, optimizer, i+1
+            )
             # updating progress bar
             data.set_description("{} {}/{}: Loss: {}, Acc: {}".format(
-                phase, initial_epoch, opt.epoch, running_loss / len(dataset[phase]),
-                running_accuracy / len(dataset[phase])))
+                phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
         # Save every epoch loss into .csv file
-        csv_logger.save([phase, initial_epoch, running_loss / len(dataset[phase]),
-                         running_accuracy / len(dataset[phase])])
+        csv_logger.save([phase, initial_epoch, running_loss, running_accuracy])
+        # Save best model if exist
+        if phase == 'valid' and running_accuracy > best_accuracy:
+            best_accuracy = running_accuracy
+            best = copy.deepcopy(model.state_dict())
+            model_logger.save_state_dict(best, filename='best.pt',
+                                         additional_values={'epoch': initial_epoch})
+    # save most recent model as checkpoint
+    checkpoint = copy.deepcopy(model.state_dict())
+    model_logger.save_state_dict(checkpoint, filename='checkpoint.pt',
+                                 additional_values={'epoch': initial_epoch})
     initial_epoch += 1
