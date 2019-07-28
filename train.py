@@ -80,7 +80,7 @@ metric_logger = logger.StatisticLogger(logdir)
 
 print(str_stage, "Setting up models")
 if opt.net == 'resnet50':
-    model = resnet50.resnet50(opt.pretrained)
+    model = resnet50.resnet50(opt.pretrained, opt.nclasses)
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
 # model = model.to(device)
