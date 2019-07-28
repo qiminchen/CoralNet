@@ -28,6 +28,8 @@ def add_general_arguments(parser):
     # Dataset IO
     parser.add_argument('--dataset', type=str, default=None,
                         help='dataset to use')
+    parser.add_argument('--source', type=str, default=None,
+                        help='which source in use')
     parser.add_argument('--workers', type=int, default=4,
                         help='number of data loading workers')
     parser.add_argument('--batch_size', type=int, default=16,
@@ -43,7 +45,13 @@ def add_general_arguments(parser):
     parser.add_argument('--pretrained', action='store_true',
                         help='using pretrained model or not')
     parser.add_argument('--nclasses', type=int, default=1000,
-                        help='number of class')
+                        help='number of source set class')
+    parser.add_argument('--ntclasses', type=int, default=0,
+                        help='number of target set class')
+    parser.add_argument('--sets', type=str, default='source',
+                        help='using source dataset or target dataset')
+    parser.add_argument('--net_path', type=str, default=None,
+                        help='fine-tune ResNet50/EfficientNet path')
 
     # Optimizer
     parser.add_argument('--optim', type=str, default='adam',
