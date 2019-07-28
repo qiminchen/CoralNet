@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 from options import options_train
 from datasets import coralnet
-from models import resnet50
+import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
 from util.util_print import str_error, str_stage, str_verbose, str_warning
@@ -32,6 +32,8 @@ else:
 
 print(str_stage, "Setting up logging directory")
 exprdir = '{}_{}_{}'.format(opt.net, opt.dataset, opt.lr)
+if opt.source is not None:
+    exprdir = '{}_'.format(opt.source) + exprdir
 logdir = os.path.join(opt.logdir, exprdir, str(opt.expr_id))
 
 if opt.resume == 0:
@@ -75,17 +77,16 @@ print(str_verbose, "Logging directory set to: %s" % logdir)
 print(str_stage, "Setting up loggers")
 csv_logger = logger.CsvLogger(opt, os.path.join(logdir, 'epoch_loss.csv'))
 metric_logger = logger.StatisticLogger(logdir)
+model_logger = logger.ModelLogger(logdir)
 
 ###################################################
 
 print(str_stage, "Setting up models")
-if opt.net == 'resnet50':
-    model = resnet50.resnet50(opt.pretrained, opt.nclasses)
+model = models.get_model(opt)
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
 # model = model.to(device)
 
-model_logger = logger.ModelLogger(logdir)
 initial_epoch = 1
 if opt.resume == 0:
     checkpoint = copy.deepcopy(model.state_dict())
