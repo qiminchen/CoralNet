@@ -56,6 +56,12 @@ class StatisticLogger(BaseLogger):
     """ prediction logger to .npz files """
     def __init__(self, filepath):
         self.filepath = filepath
+        self.epoch = 'epoch1_valid'
 
-    def save_metric(self, pred, gt):
-        pass
+    def save_metric(self, pred, gt, epoch):
+        self.epoch = 'epoch' + str(epoch) + '_valid'
+        path = os.path.join(self.filepath, self.epoch)
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        np.savez_compressed(os.path.join(path, 'metric.npz'),
+                            pred=pred, gt=gt, epoch=epoch)

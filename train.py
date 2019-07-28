@@ -1,6 +1,5 @@
 import sys
 import os
-import csv
 import time
 import copy
 import torch
@@ -75,6 +74,7 @@ print(str_verbose, "Logging directory set to: %s" % logdir)
 
 print(str_stage, "Setting up loggers")
 csv_logger = logger.CsvLogger(opt, os.path.join(logdir, 'epoch_loss.csv'))
+metric_logger = logger.StatisticLogger(logdir)
 
 ###################################################
 
@@ -200,6 +200,9 @@ while initial_epoch <= opt.epoch:
             best = copy.deepcopy(model.state_dict())
             model_logger.save_state_dict(best, filename='best.pt',
                                          additional_values={'epoch': initial_epoch})
+        # Save validation ground truth and prediction
+        if phase == 'valid':
+            metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
     # save most recent model as checkpoint
     checkpoint = copy.deepcopy(model.state_dict())
     model_logger.save_state_dict(checkpoint, filename='checkpoint.pt',
