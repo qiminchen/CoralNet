@@ -2,6 +2,7 @@ import os
 import csv
 import sys
 import torch
+import numpy as np
 
 
 class BaseLogger(object):
@@ -33,18 +34,28 @@ class CsvLogger(BaseLogger):
 
 class ModelLogger(BaseLogger):
     """ model logger to .pt files """
-    def __init__(self):
+    def __init__(self, filepath):
         self.state_dicts = dict()
+        self.filepath = filepath
 
-    def save_state_dict(self, checkpoint, filepath, additional_values={}):
+    def save_state_dict(self, checkpoint, filename, additional_values={}):
         # Update checkpoint to the most recent epoch and save
         self.state_dicts['net'] = checkpoint
         for k, v in additional_values.items():
             self.state_dicts[k] = v
-        torch.save(self.state_dicts, filepath)
+        torch.save(self.state_dicts, os.path.join(self.filepath, filename))
 
     def load_state_dict(self, filepath):
-        state_dicts = torch.load(filepath)
-        additional_values = {k: v for k, v in state_dicts.items()
+        self.state_dicts = torch.load(filepath)
+        additional_values = {k: v for k, v in self.state_dicts.items()
                              if k != 'net'}
-        return state_dicts['net'], additional_values
+        return self.state_dicts['net'], additional_values
+
+
+class StatisticLogger(BaseLogger):
+    """ prediction logger to .npz files """
+    def __init__(self, filepath):
+        self.filepath = filepath
+
+    def save_metric(self, pred, gt):
+        pass
