@@ -222,3 +222,14 @@ def resnet50(pretrained=False, nclasses=1000, progress=True, **kwargs):
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, nclasses)
     return model
+
+
+def replace_classifier(model, net_path, nclasses):
+    state_dicts = torch.load(net_path)
+    model.load_state_dict(state_dicts['net'])
+    # Fix the Convnet
+    for param in model.parameters():
+        param.requires_grad = False
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, nclasses)
+    return model
