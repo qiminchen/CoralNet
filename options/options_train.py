@@ -42,6 +42,8 @@ def add_general_arguments(parser):
                         help='network type to use')
     parser.add_argument('--pretrained', action='store_true',
                         help='using pretrained model or not')
+    parser.add_argument('--nclasses', type=int, default=1000,
+                        help='number of class')
 
     # Optimizer
     parser.add_argument('--optim', type=str, default='adam',
