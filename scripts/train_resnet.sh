@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-outdir=./path/to/output/dir
+outdir=/Users/qiminchen/Downloads
 
 set -e
 
 python train.py \
     --net resnet50 \
+    --pretrained \
     --dataset coralnet \
+    --sets "source" \
     --batch_size 32 \
     --epoch_batches 2500 \
     --eval_batches 5 \
@@ -17,5 +19,4 @@ python train.py \
     --vis_batches_vali 10 \
     --workers 4 \
     --logdir "$outdir" \
-    --suffix '{}' \
     $*
