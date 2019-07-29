@@ -36,28 +36,49 @@
 
 ### Preprocess
 
-  1. Divide the data **sources** into "source" and "target" chunks. Make sure that "target" chunk does not include any sources Oscar gave me earlier this year.
+  1. Divide the data sources into "source" and "target" sets. Make sure that "target" set does not include any sources Oscar gave me earlier this year. In particular, make sure source 16 (https://coralnet.ucsd.edu/source/16/) is in the "target" set. This is to enable a comparison on the PLC dataset.
   
   2. There are around 1 million images in coralnet with more than 1000 labels, should talk to NOAA about identifying and merging them to 1000 (TBD) labels that are most common and used across the most sources, also discard the rare labels.
   
-  3. Once the labels are set, use 224x224 windows to crop the image centering at each annotation coordinate. Two ways to do it: one is cropping the images in advance and storing them in different folders according to their labels, the other is cropping the images when loading the Dataset, I suggest cropping the annotation in advance.
+  3. Once the labels are set, use 224x224 windows to crop the image centering at each annotation coordinate: cropping the images when loading the Dataset. Be cautious about `__getitem__` function.
   
   4. Write the images path and "source"/"target" chunks to *all_images.txt* and *is_train.txt* for convenient data loading.
 
 ## Training
 
-  1. Use ResNet50 pretrained on ImageNet as pretrained model and replace the last fully connected layer.
+  1. Use the EfficientNet b4 configuration pre-trained on ImageNet as the pre-trained model and replace the last fully connected layer.
   
   2. Use the "source" chunks to fine tune the entire network.
   
-  3. Use the "target" chunks to evaluate the fine-tuned ResNet50. For each target source, split it into training set and testing set, replace the last layer of ResNet50 with <img src="https://latex.codecogs.com/gif.latex?k" title="k" /> classifier layer, where <img src="https://latex.codecogs.com/gif.latex?k" title="k" /> is the number of the labels of each target source. Then only fine-tune the classifier with training set and evaluate the overall accuracy and per-class accuracy with testing set.
+  3. Use the "target" set to evaluate the fine-tuned EfficientNet. For each target source, split it into the training set and testing set (Use 1/8 for testing, 7/8 for training). Push all patches through the base-network, store the features then train a logistic regression classifier (e.g. scikit-learn toolkit). Evaluate the classifier on the test set.
   
-  4. For each target source, after fine-tuning the fully connected layer, compare to using the features from the current network. Need to talk to Oscar about this.
+  4. [BONUS] replace the last layer in pre-trained net and fine-tune on each source.
   
-## Comparison
+## Key results plot
 
-  1. "target" chunks on ResNet50 pretrained on ImageNet **vs.** pretrained on CoralNet (ResNet50 after fine-tuning on "source" chunk). Both only fine-tune on the last fully connected layer.
+  1. "Target" set performance versus the beta features. **The key plot is a histogram of difference in performance, per source, compared to the beta features.** This plot would be directly relevant to the performance of CoralNet.
   
-  2. "target" chunks on fine-tuned ResNet50: 224x224 receptive field size **vs.** 168x168 receptive field size. Both only fine-tune on the last fully connected layer.
-  
-  3. Try EfficientNets if time is available.
+  2. A comparison on Pacific Labeled Corals. Results in the same format as following woule be great:
+    
+      a) Intra-expert: self-consistency of experts.
+      
+      b) Inter-expert: agreement level across experts.
+      
+      c) Texton: Oscar's CVPR 2012 classifier (HOG+SVM).
+      
+      d) ImageNet feat: features from ImageNet backbone. Logistic regression classifier trained on each source.
+      
+      e) ImageNet BP: net pre-trained on ImageNet. Fine-tuned on each source in the "target" set.
+      
+      f) CoralNet feat: net pre-trained on CoralNet data. Logistic regression classifier trained on each source.
+      
+      g) CoralNet BP: net pre-trained on CoralNet data. Fine-tuned on each source in the "target" set.
+      
+      h) **[THIS PROJECT]**: Res (Efficient) Net pre-trained on new CoralNet data export. Logistic regression classifier trained on each source.
+      
+      i) **[THIS PROJECT]**: Res (Efficient) Net pre-trained on new CoralNet data export. Fine-tuned on each source in the "target" set. (Same as training step 4)
+
+## Analysis and hyper-parameter sweeps (BONUS)
+
+  1. Create base-net with smaller / larger receptive field.
+  2. Try ResNet50 or deeper ResNet
