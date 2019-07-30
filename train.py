@@ -31,7 +31,11 @@ else:
 ###################################################
 
 print(str_stage, "Setting up logging directory")
-exprdir = '{}_{}_{}'.format(opt.net, opt.dataset, opt.lr)
+if opt.net == 'resnet50':
+    exprdir = '{}_{}_{}'.format(opt.net, opt.dataset, opt.lr)
+elif opt.net == 'efficientnet':
+    exprdir = '{}-{}_{}_{}'.format(opt.net, opt.efficient_version,
+                                   opt.dataset, opt.lr)
 if opt.source is not None:
     exprdir = '{}_'.format(opt.source) + exprdir
 logdir = os.path.join(opt.logdir, exprdir, str(opt.expr_id))

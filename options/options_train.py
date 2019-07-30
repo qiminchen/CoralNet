@@ -40,7 +40,7 @@ def add_general_arguments(parser):
     parser.add_argument('--log_time', action='store_true', help='adding time log')
 
     # Network name
-    parser.add_argument('--net', type=str, required=True,
+    parser.add_argument('--net', type=str, required=True, default='efficientnet',
                         help='network type to use')
     parser.add_argument('--pretrained', action='store_true',
                         help='using pretrained model or not')
@@ -52,6 +52,8 @@ def add_general_arguments(parser):
                         help='using source dataset or target dataset')
     parser.add_argument('--net_path', type=str, default=None,
                         help='fine-tune ResNet50/EfficientNet path')
+    parser.add_argument('--efficient_version', type=str, default='b4',
+                        help='efficient network version, currently support b0 to b5')
 
     # Optimizer
     parser.add_argument('--optim', type=str, default='adam',
@@ -89,7 +91,8 @@ def add_general_arguments(parser):
     parser.add_argument('--vis_batches_train', type=int, default=10,
                         help="# batches to visualize during training")
     parser.add_argument('--tensorboard', action='store_true',
-                        help='Use tensorboard for logging. If enabled, the output log will be at [logdir]/[tensorboard]/[net_classes_dataset]/[expr_id]')
+                        help='Use tensorboard for logging. If enabled, the output log will be at '
+                             '[logdir]/[tensorboard]/[net_classes_dataset]/[expr_id]')
     parser.add_argument('--vis_workers', default=4, type=int, help="# workers for the visualizer")
     parser.add_argument('--vis_param_f', default=None, type=str,
                         help="Parameter file read by the visualizer on every batch; defaults to 'visualize/config.json'")
