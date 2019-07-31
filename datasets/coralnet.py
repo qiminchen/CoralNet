@@ -5,8 +5,9 @@ import torch.utils.data as data
 
 
 class Dataset(data.Dataset):
-    def __init__(self):
-        pass
+    def __init__(self, opt, mode='train'):
+        assert mode in ['train', 'valid']
+        self.mode = mode
 
     def __getitem__(self, item):
         pass
