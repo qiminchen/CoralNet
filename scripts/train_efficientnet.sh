@@ -6,7 +6,7 @@ set -e
 
 python train.py \
     --net efficientnet \
-    --efficient_version "b4" \
+    --net_version "b4" \
     --pretrained \
     --dataset coralnet \
     --sets "source" \

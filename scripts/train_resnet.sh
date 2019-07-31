@@ -5,7 +5,9 @@ outdir=/Users/qiminchen/Downloads
 set -e
 
 python train.py \
-    --net resnet50 \
+    --net resnet \
+    --net_version "resnet50" \
+    --fine_tune \
     --pretrained \
     --dataset coralnet \
     --sets "source" \
