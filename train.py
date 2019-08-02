@@ -90,13 +90,25 @@ print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
 model = model.to(device)
 
+###################################################
+
+print(str_stage, "Setting up optimizer")
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
+                             weight_decay=opt.wdecay)
+lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecaystep,
+                                               gamma=opt.lrdecay)
+
+###################################################
+
+print(str_stage, "Resuming model information")
 initial_epoch = 1
 if opt.resume == 0:
     checkpoint = copy.deepcopy(model.state_dict())
     best = copy.deepcopy(model.state_dict())
-    model_logger.save_state_dict(checkpoint, filename='checkpoint.pt',
+    model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',
                                  additional_values={'epoch': initial_epoch})
-    model_logger.save_state_dict(best, filename='best.pt',
+    model_logger.save_state_dict(best, optimizer, filename='best.pt',
                                  additional_values={'epoch': initial_epoch})
 else:
     if opt.resume == -1:
@@ -110,7 +122,8 @@ else:
                             "Starting from scratch") % opt.resume)
     else:
         checkpoint, additional_values = model_logger.load_state_dict(net_filename)
-        model.load_state_dict(checkpoint)
+        model.load_state_dict(checkpoint['net'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
         try:
             initial_epoch += additional_values['epoch']
         except KeyError as err:
@@ -161,15 +174,6 @@ print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
 
 ###################################################
 
-print(str_stage, "Setting up optimizer")
-criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
-                             weight_decay=opt.wdecay)
-lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecaystep,
-                                               gamma=opt.lrdecay)
-
-###################################################
-
 print(str_stage, "Start training")
 assert opt.epoch > 0
 best_accuracy = 0.0
@@ -186,7 +190,7 @@ while initial_epoch <= opt.epoch:
         # Loss utility
         metric_util = util_metric.MetricUtil()
         # Progress bar
-        data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]))
+        data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]), ncols=120)
         for i, (inputs, labels) in enumerate(data):
             inputs = inputs.to(device)
             labels = labels.to(device)
@@ -203,13 +207,14 @@ while initial_epoch <= opt.epoch:
         if phase == 'valid' and running_accuracy > best_accuracy:
             best_accuracy = running_accuracy
             best = copy.deepcopy(model.state_dict())
-            model_logger.save_state_dict(best, filename='best.pt',
+            model_logger.save_state_dict(best, optimizer, filename='best.pt',
                                          additional_values={'epoch': initial_epoch})
         # Save validation ground truth and prediction
         if phase == 'valid':
             metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
     # save most recent model as checkpoint
     checkpoint = copy.deepcopy(model.state_dict())
-    model_logger.save_state_dict(checkpoint, filename='checkpoint.pt',
+    model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',
                                  additional_values={'epoch': initial_epoch})
     initial_epoch += 1
+print("Best validation accuracy: {:.6f}".format(best_accuracy))

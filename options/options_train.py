@@ -71,7 +71,7 @@ def add_general_arguments(parser):
                         help='weight decay')
     parser.add_argument('--lrdecay', type=float, default=0.1,
                         help='learning rate decay')
-    parser.add_argument('--lrdecaystep', type=int, default=10,
+    parser.add_argument('--lrdecaystep', type=int, default=3,
                         help='learning rate decay step size')
 
     # Logging and visualization
