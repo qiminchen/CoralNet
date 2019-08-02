@@ -4,7 +4,7 @@ import torch
 class MetricUtil:
     def __init__(self):
         self.running_loss = 0.0
-        self.running_accuracy = 0
+        self.running_accuracy = 0.0
         self.pred = []
         self.gt = []
 
@@ -25,4 +25,4 @@ class MetricUtil:
         self.running_loss += loss.item()
         self.running_accuracy += torch.sum(predicts == labels.data)
         return (self.running_loss / nbatch,
-                self.running_accuracy / (nbatch * inputs.size(0)))
+                self.running_accuracy.item() / (nbatch * inputs.size(0)))

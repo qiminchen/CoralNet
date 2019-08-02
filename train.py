@@ -6,7 +6,7 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 from options import options_train
-from datasets import coralnet
+import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
@@ -26,7 +26,9 @@ print(str_stage, "Setting device")
 if opt.gpu == '-1':
     device = torch.device('cpu')
 else:
-    device = torch.device('cuda:0')
+    os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
+    device = torch.device('cuda')
+    print(device)
 
 ###################################################
 
@@ -86,7 +88,7 @@ print(str_stage, "Setting up models")
 model = models.get_model(opt)
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
-# model = model.to(device)
+model = model.to(device)
 
 initial_epoch = 1
 if opt.resume == 0:
@@ -128,9 +130,10 @@ else:
 
 print(str_stage, "Setting up data loaders")
 start_time = time.time()
+Dataset = datasets.get_dataset(opt.dataset)
 dataset = {
-    'train': coralnet.Dataset(opt, mode='train'),
-    'valid': coralnet.Dataset(opt, mode='valid')
+    'train': Dataset(opt, mode='train'),
+    'valid': Dataset(opt, mode='valid')
 }
 dataloaders = {
     'train': torch.utils.data.DataLoader(
@@ -171,7 +174,7 @@ print(str_stage, "Start training")
 assert opt.epoch > 0
 best_accuracy = 0.0
 running_loss = 0.0
-running_accuracy = 0
+running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
     for phase in ['train', 'valid']:
@@ -192,7 +195,7 @@ while initial_epoch <= opt.epoch:
                 model, phase, inputs, labels, criterion, optimizer, i+1
             )
             # updating progress bar
-            data.set_description("{} {}/{}: Loss: {}, Acc: {}".format(
+            data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
                 phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
         # Save every epoch loss into .csv file
         csv_logger.save([phase, initial_epoch, running_loss, running_accuracy])

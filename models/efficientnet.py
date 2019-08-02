@@ -3,6 +3,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.utils import model_zoo
 
 from util.util_efficientnet import (
     relu_fn,
@@ -12,8 +13,16 @@ from util.util_efficientnet import (
     get_same_padding_conv2d,
     get_model_params,
     efficientnet_params,
-    load_pretrained_weights,
 )
+
+url_map = {
+    'efficientnet-b0': 'http://storage.googleapis.com/public-models/efficientnet-b0-08094119.pth',
+    'efficientnet-b1': 'http://storage.googleapis.com/public-models/efficientnet-b1-dbc7070a.pth',
+    'efficientnet-b2': 'http://storage.googleapis.com/public-models/efficientnet-b2-27687264.pth',
+    'efficientnet-b3': 'http://storage.googleapis.com/public-models/efficientnet-b3-c8376fa2.pth',
+    'efficientnet-b4': 'http://storage.googleapis.com/public-models/efficientnet-b4-e116e8b3.pth',
+    'efficientnet-b5': 'http://storage.googleapis.com/public-models/efficientnet-b5-586e6cc6.pth',
+}
 
 
 class MBConvBlock(nn.Module):
@@ -189,10 +198,16 @@ class EfficientNet(nn.Module):
         return EfficientNet(blocks_args, global_params)
 
     @classmethod
-    def from_pretrained(cls, model_name, pretrained, num_classes=1000):
-        model = EfficientNet.from_name(model_name, override_params={'num_classes': num_classes})
+    def from_pretrained(cls, model_name, pretrained, num_classes, fine_tune):
+        model = EfficientNet.from_name(model_name, override_params={'num_classes': 1000})
         if pretrained:
-            load_pretrained_weights(model, model_name, load_fc=(num_classes == 1000))
+            state_dict = model_zoo.load_url(url_map[model_name])
+            model.load_state_dict(state_dict)
+        if not fine_tune:
+            for param in model.parameters():
+                param.requires_grad = False
+        num_ftrs = model._fc.in_features
+        model._fc = nn.Linear(num_ftrs, num_classes)
         return model
 
     @classmethod
@@ -211,7 +226,7 @@ class EfficientNet(nn.Module):
             raise ValueError('model_name should be one of: ' + ', '.join(valid_models))
 
 
-def efficientnet(pretrained, version, num_classes):
+def efficientnet(pretrained, version, num_classes, fine_tune):
     model_name = 'efficientnet-' + version
-    model = EfficientNet.from_pretrained(model_name, pretrained, num_classes)
+    model = EfficientNet.from_pretrained(model_name, pretrained, num_classes, fine_tune)
     return model

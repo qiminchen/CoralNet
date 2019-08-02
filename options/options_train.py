@@ -1,9 +1,6 @@
-import sys
 import argparse
 import torch
 from util.util_print import str_warning
-from datasets import get_dataset
-from models import get_model
 
 
 def add_general_arguments(parser):

@@ -12,7 +12,7 @@ def get_model(opt):
                                               opt.ntclasses)
     elif opt.net == 'efficientnet':
         model = module.efficientnet(opt.pretrained, opt.net_version,
-                                    opt.nclasses)
+                                    opt.nclasses, opt.fine_tune)
         # replace classifier in future work
     else:
         raise NotImplementedError(opt.net)
