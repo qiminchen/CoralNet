@@ -19,8 +19,8 @@ class MetricUtil:
                 loss.backward()
                 optimizer.step()
             elif phase == 'valid':
-                self.pred += predicts
-                self.gt += labels.data
+                self.pred += list(predicts.cpu().numpy())
+                self.gt += list(labels.cpu().numpy())
         # statistics
         self.running_loss += loss.item()
         self.running_accuracy += torch.sum(predicts == labels.data)

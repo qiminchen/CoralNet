@@ -4,12 +4,15 @@ channels:
   - pytorch
   - conda-forge
 dependencies:
-  - python=
-  - numpy=
-  - tqdm=4.28.1
+  - python=3.7.3
+  - numpy=1.17.0
+  - tqdm=4.32.1
   - scikit-image=0.14.0
-  - numba=
-  - opencv=
-  - pytorch=
-  - torchvision=
-  - scikit-learn=
+  - pytorch=1.0.1
+  - torchvision=0.2.1
+  - scikit-learn=0.17.1
+  - pandas=0.24.2
+  - cuda90=1.0
+  - cudatoolkit=9.0
+  - cudnn=7.6.0
+  - pillow=6.1.0
