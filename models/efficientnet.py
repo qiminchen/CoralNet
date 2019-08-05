@@ -182,7 +182,9 @@ class EfficientNet(nn.Module):
         """ Calls extract_features to extract features, applies final linear layer, and returns logits. """
 
         # Convolution layers
+        torch.cuda.synchronize()
         x = self.extract_features(inputs)
+        torch.cuda.synchronize()
 
         # Pooling and final linear layer
         x = F.adaptive_avg_pool2d(x, 1).squeeze(-1).squeeze(-1)
