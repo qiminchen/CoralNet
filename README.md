@@ -89,7 +89,7 @@
   
   2. Confusion matrix of EfficientNet and ResNet50:
   
-      <img src="/images/EfficientNet-B4.png"  width="430" height="430"><img src="/images/ResNet50.png"  width="430" height="430">
+      <img src="/images/EfficientNet-B4.png"  width="400" height="400"><img src="/images/ResNet50.png"  width="400" height="400">
       
   3. CPU runtime
   
