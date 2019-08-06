@@ -82,3 +82,23 @@
 
   1. Create base-net with smaller / larger receptive field.
   2. Try ResNet50 or deeper ResNet
+  
+## Progress
+
+  1. Successfully ran the code with EfficientNet and ResNet50 models on Moorea Labelled Dataset.
+  
+  2. Confusion matrix of EfficientNet and ResNet50:
+  
+      <img src="/images/EfficientNet-B4.png"  width="430" height="430"><img src="/images/ResNet50.png"  width="430" height="430">
+      
+  3. CPU runtime
+  
+      **ResNet50**: maximum of 11 seconds spent of all batches with a batch size of 32, an average of 6 seconds spent in all batches with a batch size of 32, overall 10m 49s spent in forwarding 100 batches (3200 images).
+      
+      <img src="/images/resnet50_cpu_runtime.png">
+      
+      **EfficientNet**: maximum of 20 seconds spent of all batches with a batch size of 32, an average of 8 seconds spent in all batches with a batch size of 32, overall 13m 6s spent in forwarding 100 batches (3200 images).
+      
+      <img src="/images/efficientnet_cpu_runtime.png">
+      
+  4. Going on ...
