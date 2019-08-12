@@ -7,7 +7,7 @@ import datasets
 import numpy as np
 from tqdm import tqdm
 from options import options_test
-from util.util_print import str_error, str_stage, str_verbose, str_warning
+from util.util_print import str_stage, str_verbose
 
 
 ###################################################
@@ -60,6 +60,8 @@ data = tqdm(dataloaders, total=len(dataloaders), ncols=120)
 total_start = time.time()
 batch_time = []
 for i, (inputs, labels) in enumerate(data):
+    inputs = inputs.to(device)
+    labels = labels.to(device)
     # Compute cpu runtime per batch
     batch_start = time.time()
     with torch.no_grad():
