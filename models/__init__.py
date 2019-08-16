@@ -6,10 +6,10 @@ def get_model(opt):
     if opt.net == 'resnet':
         model = module.resnet(opt.pretrained, opt.net_version,
                               opt.nclasses, opt.fine_tune)
-        if opt.sets == 'target':
-            assert opt.ntclasses > 0
-            model = module.replace_classifier(model, opt.net_path,
-                                              opt.ntclasses)
+        # if opt.sets == 'target':
+        #     assert opt.ntclasses > 0
+        #     model = module.replace_classifier(model, opt.net_path,
+        #                                       opt.ntclasses)
     elif opt.net == 'efficientnet':
         model = module.efficientnet(opt.pretrained, opt.net_version,
                                     opt.nclasses, opt.fine_tune)

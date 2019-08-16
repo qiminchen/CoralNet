@@ -49,7 +49,9 @@ def add_general_arguments(parser):
     parser.add_argument('--ntclasses', type=int, default=0,
                         help='number of target set class')
     parser.add_argument('--sets', type=str, default='source',
-                        help='using source dataset or target dataset')
+                        help='using source dataset or target dataset,'
+                             '"source" -> datasets for training new coralnet'
+                             '"target" -> datasets for extracting features')
     parser.add_argument('--net_path', type=str, default=None,
                         help='fine-tune ResNet50/EfficientNet path')
     parser.add_argument('--net_version', type=str, default='b4',
