@@ -9,6 +9,7 @@ python test.py \
     --net_version "b0" \
     --dataset coralnet \
     --sets "source" \
+    --nclasses 9 \
     --batch_size 32 \
     --workers 4 \
     --net_path "$net_path" \

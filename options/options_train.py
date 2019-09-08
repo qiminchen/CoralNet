@@ -44,7 +44,7 @@ def add_general_arguments(parser):
     parser.add_argument('--fine_tune', action='store_true',
                         help='True -> fine tune the entire network,'
                              'False -> only fine tune the top layer')
-    parser.add_argument('--nclasses', type=int, default=1000,
+    parser.add_argument('--nclasses', type=int, required=True, default=1000,
                         help='number of source set class')
     parser.add_argument('--ntclasses', type=int, default=0,
                         help='number of target set class')

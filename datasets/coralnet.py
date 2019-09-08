@@ -28,6 +28,7 @@ class Dataset(data.Dataset):
         if self.sets == 'source':
             list_root = os.path.join('/path/to/status', 'status')
         elif self.sets == 'target':
+            assert opt.source is not None
             list_root = os.path.join('/path/to/status', 'status')
         else:
             raise NotImplementedError("Data sets incorrect!")

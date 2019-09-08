@@ -152,7 +152,7 @@ class EfficientNet(nn.Module):
 
         # Head
         in_channels = block_args.output_filters  # output of final block
-        out_channels = round_filters(1280, self._global_params)
+        out_channels = round_filters(4096, self._global_params)
         self._conv_head = Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
         self._bn1 = nn.BatchNorm2d(num_features=out_channels, momentum=bn_mom, eps=bn_eps)
 
@@ -204,7 +204,11 @@ class EfficientNet(nn.Module):
         model = EfficientNet.from_name(model_name, override_params={'num_classes': 1000})
         if pretrained:
             state_dict = model_zoo.load_url(url_map[model_name])
-            model.load_state_dict(state_dict)
+            model_state = model.state_dict()
+            pretrained_state = {k: v for k, v in state_dict.items() if k in model_state
+                                and v.size() == model_state[k].size()}
+            model_state.update(pretrained_state)
+            model.load_state_dict(model_state)
         if not fine_tune:
             for param in model.parameters():
                 param.requires_grad = False
@@ -224,7 +228,7 @@ class EfficientNet(nn.Module):
         the first four models (efficientnet-b{i} for i in 0,1,2,3) at the moment. """
         num_models = 4 if also_need_pretrained_weights else 8
         valid_models = ['efficientnet_b'+str(i) for i in range(num_models)]
-        if model_name.replace('-','_') not in valid_models:
+        if model_name.replace('-', '_') not in valid_models:
             raise ValueError('model_name should be one of: ' + ', '.join(valid_models))
 
 

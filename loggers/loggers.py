@@ -69,6 +69,19 @@ class StatisticLogger(BaseLogger):
                             pred=pred, gt=gt, epoch=epoch)
 
 
+class FeatureLogger(BaseLogger):
+    """ save features to .npz file"""
+    def __init__(self, filepath):
+        self.filepath = filepath
+
+    def save_feature(self, features, labels, phase):
+        path = os.path.join(self.filepath, phase)
+        if not os.path.isdir(path):
+            os.mkdir(path)
+
+        pass
+
+
 def confusion_logger(gt, pred, title, filepath):
     # Classes for Moorea Labelled Dataset
     classes = ['CCA', 'Turf', 'Macroalgae', 'Sand', 'Acropora',

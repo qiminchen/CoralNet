@@ -6,6 +6,7 @@ import models
 import datasets
 import numpy as np
 from tqdm import tqdm
+import torch.nn as nn
 from options import options_test
 from util.util_print import str_stage, str_verbose
 

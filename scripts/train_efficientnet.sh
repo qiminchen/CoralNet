@@ -10,6 +10,7 @@ python train.py \
     --pretrained \
     --fine_tune \
     --dataset coralnet \
+    --nclasses 9 \
     --gpu 0 \
     --sets "source" \
     --batch_size 32 \
