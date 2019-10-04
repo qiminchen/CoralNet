@@ -1,0 +1,1360 @@
+label_id,label_name,exist_in_source,exist_in_target,annotation_count
+1432,EAM: Dead Hard Coral,1,1,4871135
+82,Turf,1,1,4135700
+84,Sand,1,1,2856198
+1348,CRED-Turf growing on hard substrate,1,1,1468571
+3438,Hard Substrate,1,1,1166099
+182,Dead Substrate,1,1,958204
+101,CCA (crustose coralline algae),1,1,924230
+118,Unclear,1,1,644753
+81,Macroalgae,1,1,634020
+83,CCA/Bare Space,1,1,488098
+168,Acroporidae (branching),1,1,480377
+1412,Acropora corymbose/tabular/plate,1,1,397266
+95,Sediment,1,1,350389
+801,Substrate: Unconsolidated: Sand/Mud (<2mm),1,1,337408
+1340,CRED-CCA growing on hard substrate,1,1,328486
+1433,Epilithic algal matirx smotheting rubble,1,1,325273
+444,Porites compressa,1,1,321206
+222,Shadow,1,1,305688
+96,Bare Substrate,1,1,294074
+515,Rock,1,1,264129
+107,Transect hardware,1,1,250842
+524,Rock Rubble,1,1,236131
+2099,CREP-T1 Turf algae,1,0,233847
+74,Porites,1,1,226309
+73,Pocillopora,1,1,221968
+1871,ARMS-CREP-CCA,1,1,221571
+124,Broken coral rubble,1,1,218313
+169,Acroporidae (plate/encrusting),1,1,205990
+1741,"Crustose, turf, bare",1,0,201003
+1337,CRED-Encrusting macroalgae,1,1,164046
+625,Sediment Covered Limestone,1,0,161407
+503,Dictyota spp.,1,1,160046
+85,Off,1,1,157644
+103,All other,1,1,144947
+105,Dead coral,1,1,144803
+793,Turf growing on hard substrate,1,0,144799
+176,Alcyoniidae,1,1,142868
+1457,Rubble,1,1,140173
+171,Poritidae massive,1,1,139352
+516,Fuzz,1,0,134057
+174,Favidae-Mussidae massive/meandroid,1,1,133279
+184,Coral,1,1,131842
+170,Pocilloporidae,1,1,125640
+89,Porites lobata,1,1,125621
+167,Acroporidae (table/corymbose/digitate),1,0,120158
+1403,Calcifying calcareous crustose algae: DHC,1,1,118171
+237,Hard Coral (massive),1,0,114920
+463,Turf sand,1,1,114780
+102,Sponge,1,1,110465
+1596,MASE: Porites,1,1,109325
+92,Algae,1,1,107906
+80,Soft Coral,1,1,106197
+70,Montipora,1,1,104108
+2644,Sandy Turf,1,0,101386
+522,Red Turf,1,1,99869
+438,Montipora capitata,1,1,98908
+592,Branching Gorgonian,1,0,95775
+1374,Pseudodiploria strigosa,1,0,95451
+1639,Thin sediment,1,1,94640
+3007,Pavement (LOF),1,0,94634
+2238,Brown fleshy algae,1,1,94095
+1886,ARMS-CREP-No Recruitment,1,1,89084
+1826,Substrate attached,1,0,86174
+110,Montastrea cavernosa,1,1,80397
+403,Halimeda,1,1,79645
+2543,Cyanobacteria,1,1,79562
+1442,Calcifying algae: Halimeda,1,1,78745
+91,Hard coral,1,1,77529
+1294,CRED-Montipora spp_encrusting,1,1,75896
+1459,Other Soft Corals,1,1,74974
+177,Other soft coral,1,1,74586
+1827,TAPE,1,1,73348
+1852,Porifera,1,0,70114
+131,Porites lobata 1,1,1,69857
+88,Porites rus,1,1,69451
+322,Macroalgae: Encrusting: red,1,1,68323
+2093,CREP-T1 Coral,1,0,68040
+1887,ARMS-CREP-Unavailable,1,1,67962
+312,Macroalgae: Filamentous / filiform : brown,1,0,65431
+79,Millepora,1,1,64085
+1899,ARMS-CREP-Bryozoan,1,1,63325
+143,Cyanobacteria films,1,1,62177
+1903,ARMS-CREP-Sponge,1,1,61172
+1306,CRED-Porites spp_massive,1,1,60762
+1631,Unidentified arborescent bryozoan(substratum),0,1,60740
+1911,Rock_Pavement,1,1,60404
+1336,CRED-Peyssonnelia spp,1,1,60177
+1155,Hydro-bryo complex,1,1,60044
+781,Artificial material of experimental setup,1,0,59809
+404,Algae matrix,1,1,58952
+1434,Common LRG Alcyoniide,1,1,58841
+59,Acropora,1,1,58302
+2446,Bare/Turf,1,0,57013
+1189,Non CCA Crustose Algae,1,1,55766
+179,Other sessile invertebrates,1,1,55685
+2442,Tile,1,0,55087
+204,Acropora (branching),1,1,54143
+1349,CRED-Turf growing on rubble,1,1,53483
+1354,CRED-Unclassified/Unknown,1,1,53423
+1593,MASE: Large Rounded Polyps,1,1,52631
+1594,MASE: Small or Invis Polyps,1,1,51985
+138,Lobophora,1,1,51469
+300,Macroalgae: Large canopy-forming : Ecklonia,1,1,51177
+4117,Encrsuting Fleshy Algae,1,0,50294
+429,Sargassum sp,1,1,49666
+1882,ARMS-CREP-Peyssonnelia spp,1,0,49386
+1708,Lithothamnion spp.,1,1,48853
+1873,ARMS-CREP-Brown encrusting macroalgae,1,1,48737
+2246,Seagrasses: Strap-like leaves: P. australis,1,0,48154
+106,Sand and sediment,1,0,47450
+2153,Zostera marina,0,1,47295
+1400,"Hard substrate white, i.e. limestones",1,0,47289
+2549,Brown encrusting alga,1,1,45958
+1408,BRA: Acropora Branching,1,1,45168
+974,Acroporidae Other,1,1,44065
+532,Peyssonnelia,1,0,43420
+181,Macroalgae 1,1,1,43340
+133,Zoanthid,1,1,40963
+310,Macroalgae: Filamentous / filiform : red,1,1,40373
+1331,CRED-Halimeda spp,1,1,40158
+1586,Macroalgae: Encrusting: calcareous,1,0,38838
+1187,Diploria labyrinthiformis,1,0,38303
+584,Ulva sp.,1,1,36391
+1453,Other Algae,1,1,35712
+94,Seagrass,1,1,35189
+523,Shell/ Shell Hash,1,1,34877
+1370,Orbicella franksi,1,0,34796
+814,oceanic sand,1,0,34651
+173,Poritidae branching,1,1,34528
+549,Hydroid/Bryozoan,1,0,34433
+1662,Corallina officinalis (substratum),1,0,34367
+292,Sponges:crusts,1,0,33914
+1647,Unknown,1,1,33454
+1133,"Red algae, crustose coralline",1,0,33345
+3535,Palythoa caribaeorum,1,0,33227
+1405,Massive or encrusting sponges,1,1,32793
+242,Hard Coral (branching),1,0,32754
+3122,Unstable Substrate,1,0,32642
+1637,Framer,1,1,31909
+1295,CRED-Montipora spp_foliose,1,1,31878
+1341,CRED-CCA growing on rubble,1,1,29978
+2097,CREP-T1 Crustose coralline algae,1,0,29714
+1895,ARMS-CREP-Tunicate Colonial,1,1,29611
+1426,TFP: Visible Relief Structures,1,1,29025
+175,Other hard coral,1,1,27852
+1561,Macroalgae: Turf,1,0,27722
+1438,EAM: Rock or Substrate,1,0,27478
+1413,Porites (branching),1,1,26904
+435,Turbinaria (algae),1,1,26738
+579,Polyneura latissima,1,1,26671
+2101,CREP-T1 Unclassified/Unknown benthos,1,0,26191
+1128,"Red algae, unidentified encrusting",1,1,25906
+635,Dead coral with algae,1,1,25861
+1265,CRED-Foliose hard coral,1,0,25693
+1499,Diplosoma listerianum,1,1,25552
+2087,Dead Porites massive,1,1,25242
+1498,Didemnum vexillum,1,1,25223
+1307,CRED-Porites spp_encrusting,1,1,25056
+392,Ocomplex,1,1,25023
+1342,CRED-Octocoral,1,1,24762
+2248,Seagrasses: Strap-like leaves: Z. muelleri,1,0,24660
+401,Dictyota,1,1,24564
+113,Porites astreoides,1,1,24365
+2787,ARMS-Biofilm,1,0,24255
+116,Platygyra,1,1,24045
+2513,Pavement,1,0,24026
+172,Poritidae encrusting,1,1,23916
+622,Porites PLating,1,1,23792
+1175,XENIIDAE,1,1,23727
+440,Montipora patula,1,1,23436
+3444,Corynactis carnea,1,0,23288
+2473,Red fleshy algae,1,1,22986
+2098,CREP-T1 Sediment,1,0,22986
+570,Chondracanthus exasperatus,1,0,22515
+1905,ARMS-CREP-Sediment,1,0,22356
+147,Encrusting sponge,1,1,22052
+1415,BRA: Other,1,1,22024
+178,Sea fans/plumes,1,1,21995
+372,Substrate: Consolidated (hard) Boulders,1,0,21989
+72,Pavona,1,1,21962
+2100,CREP-T1 Tape/Wand,1,1,21607
+369,Substrate: Unconsolidated : pebble/gravel,1,1,20754
+1369,Orbicella faveolata,1,0,20488
+3453,Obscured,1,0,20357
+450,Pocillopora meandrina,1,1,20277
+1264,CRED-Encrusting hard coral,1,1,20181
+2096,CREP-T1 Macroalgae,1,0,20123
+2051,Sinularia,1,1,20040
+1004,"Bryozoan, encrusting unidentified",1,1,19585
+139,Fleshy algae,1,0,19384
+3204,Not root,1,0,19257
+1338,CRED-Upright macroalgae,1,1,19185
+576,Metridium farcimen,1,0,19145
+2366,Concrete,0,1,19117
+642,Filamentous Algae,1,1,19096
+395,Pseudodiploria,1,1,19065
+370,Substrate: Consolidated (hard) Rock,1,0,18978
+428,Padina sp,1,1,18913
+2454,Turf overgrowing recently dead coral,1,0,18913
+567,Balanus crenatus,1,1,18739
+474,Siderastrea spp.,1,1,18484
+128,Sarcophyton,1,1,18464
+1883,ARMS-CREP-Red encrusting macroalgae,1,1,18428
+2791,Scuzz,1,0,18261
+61,Cyphastrea,1,1,18187
+368,Substrate: Unconsolidated (soft): sand/mud,1,0,17947
+1448,Filamentous Macroalgae,1,0,17940
+381,Dlabyrinthiformis,1,1,17905
+473,Occulina sp.,1,0,17874
+3186,rubble coral,1,0,17785
+2453,Thick turf algae,1,0,17732
+1587,Bare Panel,1,1,17676
+1802,Gorgoniidae,1,0,17603
+1270,CRED-Acropora spp_tabulate,1,1,17540
+187,Acropora (tabulate),1,1,17407
+3285,Coarse Sand,1,0,17321
+631,Non-Acropora massive,1,0,17182
+68,Lobophyllia,1,1,17004
+2114,Shell hash/Gravel,1,1,16875
+1979,Lobophora spp.,1,0,16823
+1906,ARMS-CREP-Unclassified/Unknown,1,0,16819
+62,Favia,1,1,16364
+1902,ARMS-CREP-Octocoral,1,0,16228
+556,Soft Coral plumes,1,1,16115
+1402,SOFT_SAND,1,0,15756
+4114,Substrate: Consolidated (hard),1,0,15733
+1644,Gravel,1,0,15671
+1417,MASE: Meandering Other,1,1,15622
+117,Goniastrea,1,1,15505
+461,Water,1,1,15238
+326,Macroalgae: Articulated calcareous: red,1,1,15095
+2168,Sponge Other,1,1,15034
+1427,TFP: Visible Round Corallites,1,1,14989
+504,Lobophora variegata,1,0,14961
+1352,CRED-Wand,1,1,14873
+3053,Watersipora subtorquata,1,0,14748
+1853,Bryozoan,1,1,14474
+2164,Blurry,1,0,14468
+111,Siderastrea siderea,1,1,14463
+2011,Cyanobacterium sp.,1,1,14430
+1475,Botryllus schlosseri,0,1,14397
+1397,Palythoa,1,1,14012
+1411,"Acropora digitate, branches resembling finger",1,1,14000
+589,Unspecified red algae: Sheet: Thick/Leathery,1,0,13909
+1026,Metridium senile,1,1,13836
+780,Chlorodesmis sp.,1,1,13750
+1540,Mytilus edulis,1,1,13729
+578,Plocamium cartilagineum,1,0,13656
+1974,Porites massive,1,1,13607
+1878,ARMS-CREP-Green upright macroalgae,1,0,13471
+1346,CRED-Rubble substrate,1,1,13429
+1709,Phymatolithon spp.,0,1,13417
+1889,ARMS-CREP-Calcareous Worm Tube,1,1,13329
+3080,Dead Agaricia,1,0,13275
+1972,Porites horizontalata_rus,1,0,13141
+2247,Seagrasses: Elliptical Leaves: H. ovalis,1,0,13044
+1638,Thick sediment,1,1,13002
+1146,Bare Rock,1,1,12856
+533,No Data,1,1,12794
+1390,Gorgonia spp.,1,0,12509
+641,Microalgae: cyanobacteria,1,1,12491
+423,Caulerpa,1,1,12438
+3260,Monanchora arbuscula,1,1,12397
+2469,Substrate,1,0,12282
+1368,Orbicella annularis,1,0,12074
+2527,Oysters,1,0,11907
+3238,Mussismilia braziliensis,1,1,11845
+982,Other invertebrate,1,1,11808
+416,Erect gorgonians,1,1,11741
+60,Astreopora,1,1,11677
+595,Encrusting Hard Coral,1,1,11485
+467,Solieria filiformis,1,0,11479
+183,Massive Sponge,1,1,11449
+2230,Rubble with turf algae,1,1,11223
+1592,Soft sediment,1,0,11074
+1829,Bivalve,1,1,11070
+239,Corals: Stony corals: Encrusting,1,1,10907
+1877,ARMS-CREP-Green encrusting macroalgae,1,0,10841
+1325,CRED-Red macroalgae,1,1,10551
+2474,None,1,0,10527
+323,Macroalgae: Encrusting: green,1,1,10443
+747,tag/frame/zspar etc,1,1,10435
+3240,Mussismilia harttii,1,1,10209
+3291,Montipora Plating,0,1,10178
+3714,Not colonizable,1,0,10128
+1333,CRED-Microdictyon spp,1,0,10115
+140,Calcareous algae,1,0,10050
+150,Isopora,1,0,9850
+983,Faviidae,1,0,9850
+2795,ARMS-Clear Biofilm,1,0,9824
+588,Unspecified red algae: Sheet: Thin/Membranous,1,0,9791
+1416,Branching bleached,1,1,9705
+446,Porites evermanni,1,0,9661
+1854,Tunicate,1,0,9649
+3106,Bushy Soft Coral,1,0,9614
+1607,Algae: Other,1,0,9347
+63,Fungia,1,1,9270
+1327,CRED-Blue-green macroalga,1,1,9269
+448,Pocillopora damicornis,1,1,9205
+526,Encrusting sponge/ tunicate,1,0,9108
+304,Macroalgae: Laminate: brown,1,0,9108
+483,Telesto sp.,1,0,8936
+115,Favites,1,1,8932
+3587,Sedimento grosso,1,0,8922
+99,Echinopora,1,1,8872
+1458,CCA: On dead coral,1,0,8814
+2607,Alcyoniidae Bleached (white),1,1,8640
+2546,Other,1,1,8538
+2539,Microdictyon spp.,1,0,8529
+1885,ARMS-CREP-Coral,1,1,8492
+137,Xenia,1,0,8426
+321,Macroalgae: Encrusting,1,0,8338
+1441,Cyanobacteria on rock or other substrates,1,0,8288
+1410,Stylophora (branching),1,1,8252
+1162,Echinometra mathaei,1,1,8172
+1766,Agaricia tenuifolia,1,0,8167
+449,Pocillopora eydouxi,1,0,8161
+2461,Benthic Microalgae on Sand,1,1,7943
+212,Bleached Montipora,1,0,7914
+1423,MASE: Other,1,1,7851
+3239,Mussismilia hispida,1,1,7752
+1999,Galaxura rugosa,1,0,7747
+2108,Halophila stipulacea,1,0,7711
+566,Agarum fimbriatum,1,0,7681
+1308,CRED-Porites spp_foliose,1,1,7613
+66,Leptastrea,1,1,7610
+3385,Kelp,1,0,7494
+132,Porites cylindrica,1,1,7493
+434,Gracilaria salicornia,1,1,7483
+1159,"Barnacle, dead",1,1,7479
+1627,Strongylocentrotus droebachiensis,0,1,7426
+1962,Goniastrea stelligera,1,0,7278
+1357,Agaricia agaricites,1,1,7264
+3215,Demospongiae,1,0,7256
+1260,Diadema setosum,1,0,7245
+151,Lobophyton/Sinularia,1,0,7215
+1061,"Sponge, unidentified",1,0,7213
+1431,Fishing gear,1,0,7194
+1704,Loose Substrate: Sediment,1,0,7151
+119,Bleached Hard Coral,1,1,7135
+458,Pseudodiploria bleached,1,1,7130
+1049,Rubble/debris/shell hash,1,1,7091
+505,Zonaria tournefortii,1,0,7075
+1697,Unidentified red blade (substratum),0,1,7065
+554,Hydnophora,1,1,7045
+782,Stylophora pistillata,1,0,7007
+2233,Hard Coral Coverage,1,0,6885
+377,Agaricia/Undaria,1,1,6852
+185,Stylophora,1,1,6815
+1429,"Non hermatypic: Free living (Fungia, etc)",1,1,6759
+2235,Algal Turf,1,1,6746
+2792,Miscellaneous algae,1,0,6717
+602,Acropora (digitate),1,1,6716
+1714,Unidentified red fleshy crust,0,1,6691
+629,Non-Acropora encrusting,1,0,6662
+1891,ARMS-CREP-Foraminifera,1,1,6661
+3546,Rodolito Vivo,0,1,6606
+311,Macroalgae: Filamentous / filiform : green,1,1,6583
+402,Lvariegata,1,1,6514
+2451,Pseudopterogorgia sp.,1,0,6492
+1821,Eucheuma denticulatum,1,0,6402
+783,Seratiopora hystrix,1,0,6386
+3484,Detritus,1,0,6240
+2843,Rubbles,1,1,6135
+1742,Millepora alcicornis,1,1,6082
+791,CCA growing on hard substrate,1,0,6077
+1825,Substrate unattached,1,0,6039
+442,Pavona varians,1,1,6030
+1332,CRED-Lobophora spp,1,1,5970
+216,Bleached Porites,1,0,5920
+2106,Halodule uninervis,1,0,5894
+786,Bleached Acropora formosa.,1,0,5861
+582,Spirorbid worms,1,1,5842
+2812,Chthamalus stellatus,0,1,5837
+3087,Ralfsia expansa,1,0,5735
+2363,Turbinaria Foliose,1,1,5728
+1603,Individual Tunicates,1,1,5678
+1345,CRED-Hard substrate,1,1,5656
+67,Leptoseris,1,1,5652
+2089,Sponge: Cliona,1,1,5613
+2570,Porites compressa morpho 1 fingers,1,0,5539
+1317,CRED-Corallimorph,1,1,5518
+1414,"Fine branching non-Acroporids, Seriatopora,",1,1,5503
+410,Cvirdis_complex,1,1,5502
+1998,No Detectable,1,1,5484
+3641,Turf Algae on Dead Coral (+ rubble),1,0,5465
+398,Utenuifolia,1,1,5444
+687,Unidentified algae,1,1,5434
+1407,BRA: Acropora Bottlebrush,1,0,5429
+125,Acropora formosa,1,0,5306
+393,Pastreoides,1,1,5261
+763,Platygyra ryukyuensis 1,1,0,5248
+774,Bleached Fungia sp.,1,0,5240
+3299,Rock Turf Algae,1,0,5237
+3801,Anotrichium furcellatum,1,0,5191
+2828,Dictyota dichotoma,1,1,5064
+1924,Halimeda spp.,1,1,5046
+630,Non-Acropora foliose,1,0,5034
+2132,Sargassum filipendula,1,0,4994
+3195,Bare mangrove root or substrate,1,0,4940
+2841,Bleached Jania rubens,0,1,4923
+2047,RS-Porites columnar,1,1,4921
+686,Abietinaria spp.,1,0,4912
+696,Erect Rhodphyta,1,1,4910
+394,Pporites,1,1,4886
+968,Favia matthai,1,0,4862
+2659,Orbicella,1,0,4848
+1115,"Red algae, erect coralline",1,0,4826
+3645,Dead Halimeda,1,0,4756
+1634,Unidentified hydroid (substratum),0,1,4747
+408,Ircinia_massive,1,1,4742
+1439,Cyanobacteria smothering dead coral,1,1,4698
+762,Bleached Platygyra ryukyuensis,1,0,4664
+591,Unspecified red algae: Branching: Thick,1,0,4641
+3156,Bryozoan Irregular Zooid,1,0,4638
+319,Macroalgae: Erect coarse branching brown,1,0,4590
+527,Unidentified Hard Coral,1,0,4577
+2102,Biotic Matrix,1,0,4549
+1125,"Anemone, unidentified",1,0,4548
+501,Dictyopteris hoytii,1,0,4519
+233,Bacterial mats,1,0,4475
+655,Agelas,1,0,4428
+146,Cliona,1,0,4427
+1769,Acropora palmata,1,0,4427
+456,Hydroid,1,0,4420
+771,Bleached Seratiopora hystrix,1,0,4387
+452,Microdictyon sp.,1,0,4366
+1425,TFP: Porites,1,1,4364
+2154,Oyster Shell,0,1,4364
+636,Algal Assemblage,1,1,4342
+2547,Hardpan,1,0,4324
+3123,Others,1,0,4323
+1597,Calcifying Calcareous Crustose Algae: Rubble,1,1,4316
+2649,Thin Patchy CCA,1,0,4312
+1908,Jania rubens,1,1,4311
+1858,Thalassia,1,0,4272
+1329,CRED-Dictyopteris/Dictyota spp,1,1,4258
+1293,CRED-Montipora spp_branching,1,1,4254
+1027,Obelia spp.,1,0,4240
+2581,Montipora capitata morpho 2,1,0,4230
+2037,Alveopora,1,1,4219
+1612,Phymastrea,1,0,4196
+1503,Edwardsiella lineata (substratum),0,1,4136
+1601,"Sponges: Branching, Rope Forms",1,0,4091
+2650,Thick CCA,1,0,4077
+587,Cryptopleura ruprechtiana,1,0,4073
+100,Other scleractinians,1,1,4064
+3649,Salmacina_spp/Filograna implexa,1,0,3986
+633,Heliopora,1,0,3984
+2558,Glue,1,0,3953
+460,Fish,1,1,3917
+775,Totally bleached Montipora sp.,1,0,3887
+727,Metandrocarpa taylori,1,0,3855
+1436,Sea fans/plumes/branching/whipes,1,1,3848
+409,Xmuta,1,1,3810
+2596,Favidae-Mussidae massive/meandroid Bleached,1,1,3782
+514,Wreck,1,0,3774
+1781,Madracis decactis,1,0,3773
+324,Macroalgae: Encrusting: brown,1,0,3759
+1848,PVC,1,1,3739
+764,Totally bleached Platygyra ryukyuensis,1,0,3728
+1591,Amphiroa sp.,1,0,3711
+1602,Hydroids: Feathery Types,1,1,3707
+425,Cladophora sp.,1,1,3689
+994,Balanus glandula,1,1,3685
+1145,"Brown algae, unidentified",1,1,3668
+1636,Bad point,1,1,3666
+3109,Corticated Foliose Macroalgae,1,0,3662
+722,Eurystomella bilabiata,1,0,3655
+221,Acropora (corymbose),1,1,3654
+4109,Cnidaria: Corals: Black & Octocorals,1,0,3654
+784,Totally bleached Acropora formosa 1,1,0,3638
+3881,Pink CCA on dead massive coral,1,0,3610
+342,Echinoderms: sea urchin,1,1,3594
+325,Macroalgae: Articulated calcareous,1,1,3594
+199,Turbinaria (coral),1,1,3582
+2423,Chrysophyta,1,0,3543
+621,Montipora encrusting,1,0,3543
+1798,Tube or Rod Sponge,1,0,3537
+1719,Pinctada radiata,1,0,3522
+4120,Non-sample,1,0,3512
+1008,Botrylloides violaceus,0,1,3479
+1703,Loose Substrate: Rubble,1,0,3476
+427,Acanthophora spicifera,1,0,3468
+2134,Unknown Invertebrate,1,0,3458
+236,Corals: Stony corals: Sub-massive,1,0,3445
+772,Totally bleached Seratiopora hystrix,1,0,3414
+715,Dodecaceria concharum,1,0,3399
+1898,ARMS-CREP-Bivalve-empty,1,0,3390
+109,Agariciidae,1,0,3379
+2185,Montipora capitata bleached,1,1,3367
+712,Diaperoecia californica,1,0,3344
+1488,Cliona spp.,1,1,3329
+1040,Dictyosphaeria versluysii,1,0,3310
+1839,polychaete,1,0,3287
+3241,Siderastrea stellata,0,1,3268
+484,Titanideum frauenfeldii,1,0,3226
+3135,Lichenoporidae sp.,1,0,3223
+1176,Porites furcata,1,0,3205
+804,Acroporidae (hispidose),1,1,3198
+543,Gracilaria/Rhodymenia,1,1,3184
+2117,CREP-T2 Non-Scleractinian,1,0,3141
+2590,Acroporidae branching bleached (white),1,1,3133
+660,Chondrosia reniphormis,1,0,3098
+1350,CRED-Mobile fauna,1,1,3091
+796,laurenciella marilzae,1,1,3080
+770,Bleached Stylophora pistillata,1,0,3076
+1648,Crown of Thorns Sea Star,1,1,3062
+626,PLATE,1,0,3061
+1127,"Red algae, unidentified foliose",1,1,3059
+1454,Other sesile invertebrates soft hexacorrallia,1,1,3048
+988,Barnacles,1,1,3046
+1191,Rope sponge,1,1,3019
+1650,Foliose Strap/ Branched Macro Algae,1,0,3014
+648,Crustose Algae,1,0,2937
+1623,Tricellaria inopinata (canopy),0,1,2925
+2651,Encrusting Peysso,1,0,2923
+2122,Cystoseira sp,1,0,2922
+1884,ARMS-CREP-Red upright macroalgae,1,0,2906
+1424,MASE: Bleached,1,1,2897
+3933,ARMS-PMT-Encrusting Sponge,1,1,2887
+792,CCA growing on rubble,1,1,2885
+2452,Grazed or thin turf,1,0,2884
+3302,Hard Coral_Encrusting,1,0,2870
+1738,Unidentified Fouling,1,1,2867
+3588,Sedimento fino,1,0,2865
+757,Hydroid species,1,0,2831
+3563,Articulated coralline algae,1,0,2829
+1909,Ellisolandia elongata,1,1,2828
+1795,Briareum,1,0,2827
+520,Red Strap/Filamentous Algae,1,1,2826
+585,Terebratalia transversa,1,0,2826
+1323,CRED-Green macroalgae,1,1,2814
+2119,CREP-T2 Halimeda,1,0,2810
+1300,CRED-Pavona spp_encrusting,1,1,2784
+1437,"Other sesile invertebrates Bryozoa, clams",1,1,2767
+1635,Unidentified orange sponge,1,1,2764
+3445,Aulacomya atra,1,0,2759
+4110,Cnidaria: Corals: Stony corals,1,0,2752
+3874,Pink CCA,1,0,2749
+1772,Colpophyllia natans,1,0,2743
+1440,Cyanobacteria smothering rubble,1,0,2730
+972,Favites pentagona,1,0,2699
+343,Echinoderms: sea urchin: regular urchins,1,0,2699
+519,Unidentified Brown,1,1,2697
+2072,Bleached Montipora capitata,1,0,2688
+4115,Substrate: Unconsolidated (soft),1,0,2673
+2619,Thin Sediment over Rock,1,0,2639
+3490,Leiosolenus patagonicus,1,0,2638
+2845,Macroalgae:Encrusting:Red:Calcareous:Crustose,1,0,2632
+1706,Clathromorphum spp.,0,1,2594
+1630,Unidentified arborescent bryozoan (canopy),0,1,2592
+2140,Lophelia pertusa,1,0,2589
+3603,Quadrat,1,0,2587
+1764,Bleached Platygyra,1,0,2565
+2630,Thin Turf Algae,1,0,2558
+1914,Spirobranchus sp.,1,0,2551
+2818,Chthamalus stellatus (dead),0,1,2542
+75,Psammocora,1,1,2500
+2472,Green fleshy algae,1,1,2494
+2532,Green turfing algae,1,0,2490
+557,Serpulidae worm,1,1,2474
+628,Non-Acropora branching,1,0,2474
+2209,Bleached Porites compressa,1,1,2466
+2050,Lobophytum,1,1,2458
+760,Galaxea,1,1,2457
+1980,Padina spp.,1,0,2404
+314,Macroalgae: Erect fine branching red,1,0,2401
+2425,S. edmondsoni,1,0,2387
+795,Vase sponge,1,1,2383
+2559,Dead oysters,1,0,2376
+590,Unspecified red algae: Branching: Fine/Thin,1,0,2373
+3209,Hypnea,1,0,2350
+1364,Madracis auretenra,1,0,2343
+485,Thesea nivea,1,0,2335
+220,Codium,1,0,2310
+766,Bleached Porites cylindrica,1,0,2306
+3924,Turf Algae on dead encrusting coral,1,0,2300
+301,Macroalgae: Laminate,1,0,2296
+521,Unidentified Green Algae,1,0,2285
+98,Mobile invertebrates,1,0,2263
+2784,Turfy Biotic Matrix,1,0,2250
+1064,"Red algae, filamentous",1,0,2242
+1788,Porites porites,1,0,2217
+378,Cnatans,1,1,2212
+69,Montastrea,1,1,2207
+623,Leptoria,1,1,2202
+1012,Aglaophenia spp.,1,0,2191
+1768,Acropora cervicornis,1,0,2175
+3615,Sponge: Encrusting,1,0,2159
+201,Merulina,1,1,2157
+439,Montipora flabellata,1,1,2143
+441,Pavona duerdeni,1,1,2130
+1570,Porites harrisoni,1,0,2120
+1161,Schizoporella sp.,1,1,2102
+919,Aplidium californicum,1,0,2087
+1296,CRED-Montastraea spp,1,0,2076
+1605,Foliose Algae: Other,1,1,2068
+2963,Xestospongia,1,0,2062
+1880,ARMS-CREP-Lobophora spp,1,0,2055
+1994,Dead Massive Coral,1,0,2040
+1467,Aplysilla sp.,1,1,2033
+776,Totally bleached Lobophyllia sp.,1,0,2002
+1422,"Massive, Submassive, Encrusting colonies of P",1,0,1995
+2562,Jania Sp.,1,0,1982
+3116,Other Encrusting,1,0,1982
+1896,ARMS-CREP-Vermetidae,1,0,1972
+1188,Agaricia humilis,1,0,1971
+773,Totally bleached Fungia sp.,1,0,1969
+134,Corallimorpharian,1,0,1965
+2580,Montipora capitata morpho 1,1,0,1962
+1649,Crinoids.,1,0,1959
+227,Ascidians,1,1,1951
+2139,Tubularia sp.,1,0,1942
+3208,Anemone,1,0,1936
+3698,Reteporella spp.,1,0,1934
+1711,Unidentified diatoms,1,1,1934
+1560,Platygyra daedalea,1,0,1929
+1456,Sponges: Vase,1,0,1921
+1912,Silt_Mud_Sand,1,0,1920
+1500,Ectopleura/Tubularia spp. (canopy),0,1,1902
+1335,CRED-Padina spp,1,1,1882
+2455,Schizothrix,1,0,1870
+502,Dictyopteris membranacea,1,0,1868
+1462,Alcyonium siderium (substratum),1,1,1863
+142,Recent dead coral,1,0,1842
+451,Unidentified Red,1,0,1837
+2557,dead corallina,1,0,1834
+597,Red ALgae,1,1,1820
+3932,ARMS-PMT-Tunicata,1,1,1813
+1757,Unknown Sponge - Brown,0,1,1781
+2628,Bare Rubble,1,0,1753
+130,Goniopora,1,1,1747
+1124,Out of focus,1,0,1746
+400,Encrusting gorgonian,1,1,1735
+517,Unknown Hydroid,1,0,1715
+3010,Rubble (LOF),1,0,1714
+1536,Metridium senile (substratum),0,1,1709
+1571,Porites Lutea,1,1,1708
+600,Acropora (arborescent),1,0,1706
+525,Encrusting Bryozoan,1,0,1696
+2141,Installation Surface,1,0,1688
+777,Bleached Lobophyllia sp.,1,0,1685
+3085,Nutrient Indicator Algae,1,0,1678
+610,Euphyllia,1,0,1675
+3248,Carijoa riisei,1,0,1654
+2450,Pseudopterogorgia sp,1,0,1645
+431,Tolypiocladia glomerulata,1,0,1634
+2881,Leptoseris hawaiiensis,1,0,1630
+1443,Calcifying macroalgae: Padina,1,0,1626
+692,Balanus nubilis,1,1,1624
+2537,Sargassum spp.,1,0,1614
+3380,Favia Columnar,0,1,1594
+1299,CRED-Pavona spp_massive,1,1,1591
+1794,Erythropodium (encrusting),1,0,1581
+1690,Unidentified brown branched (substratum),0,1,1574
+3486,Hymenena falklandica,1,0,1566
+1051,"Sediment, thin",1,0,1564
+1783,Madracis mirabilis,1,0,1557
+3103,Digitate Soft Coral,1,0,1544
+437,Kappaphycus sp.,1,0,1536
+3536,Halimeda (disc sediments),1,0,1536
+309,Macroalgae: Filamentous / filiform,1,0,1534
+569,Callophyllis spp.,1,0,1529
+2371,Oyster,1,1,1527
+447,Porites monticulosa,1,1,1517
+164,Diploastrea,1,1,1506
+1321,CRED-Unclassified sessile invertebrate,1,0,1498
+981,Zoanthus,1,1,1497
+1381,Erythropodium caribaeorum,1,0,1473
+3511,Halcurias sp.,1,0,1469
+1894,ARMS-CREP-Soft Worm Tube,1,1,1463
+208,Bleached Cyphastrea,1,0,1437
+2095,CREP-T1 Invertebrates,1,0,1436
+357,Crustacea: Barnacles,1,0,1420
+2437,Focal Coral Colony,1,0,1410
+3015,Turf/Filamentous,1,0,1409
+551,Unknown Sponge/Tunicate,1,0,1407
+2573,Pocillopora cauliflower,1,0,1405
+376,Acervicornis,1,1,1402
+2594,Acropora corymbose/tabular/plate Bleached,1,1,1396
+190,Coscinaraea,1,1,1396
+1926,Halimeda lacunalis_taenicola,1,0,1394
+2217,Porites lobata bleached,1,1,1384
+506,Amphiroa beauvoisii,1,0,1379
+71,Pachyseris,1,1,1375
+1869,Asparagopsis taxiformis,1,0,1371
+1907,Halopteris scoparia,1,1,1363
+1696,Unidentified red blade (canopy),0,1,1356
+1471,Balanus/Amphibalanus spp.,1,1,1313
+430,Stypopodium sp.,1,0,1304
+457,Ocomplex bleached,1,1,1303
+2879,Macroalgae:Laminate:Brown: Zonaria Turneriana,1,0,1302
+3384,Fucus sp.,1,0,1288
+1316,CRED-Bryozoan,1,1,1281
+3654,Schizomavella spp.,1,0,1272
+1384,Eunicea spp.,1,0,1258
+2092,SINV_SPO_FAN,1,1,1251
+1874,ARMS-CREP-Brown upright macroalgae,1,0,1251
+697,Bleached Diploria labyrinthiformes,1,1,1248
+1380,Briareum asbestinum,1,0,1248
+2572,Porites encrusting-plates,1,1,1243
+388,Meandrina,1,1,1243
+1330,CRED-Dictyosphaeria spp,1,1,1241
+1555,Cyphastrea microphthalma,1,0,1228
+1879,ARMS-CREP-Halimeda spp,1,1,1222
+1344,CRED-Fine sediment,1,0,1219
+3093,Arborescent Hard Coral,1,0,1217
+573,Didemnum carnulentum,1,0,1206
+1256,Phorbas topsenti,1,1,1206
+637,Tridacna: Giant clam,1,1,1205
+360,Worms: Polychaetes,1,0,1205
+415,Acompresa,1,1,1200
+2232,Other Invertebrates,1,0,1200
+2447,Deep Turf,1,0,1197
+2118,CREP-T2 Tabulate hard coral,1,0,1197
+3516,Paragoniastrea australensis,1,0,1188
+387,Madracis,1,1,1184
+3644,Unk Algae,1,0,1182
+1119,"bivalve, unidentified",1,0,1180
+720,Fucus distichus,1,0,1179
+3243,Millepora nitida,1,1,1169
+1632,Unidentified encrusting bryozoan,0,1,1158
+2844,Microbial mats,1,0,1130
+2207,Porites compressa trematodiasis,1,0,1109
+603,Acropora (arborescent table),1,0,1108
+1936,Heliopora coerulea,1,0,1106
+711,Desmarestia viridis,1,0,1106
+3657,Diplosolen obelia/Plagioecia sp.,1,0,1105
+2840,Bleached ellisolandia elongata,0,1,1089
+2084,Dead Pocillopora,1,1,1087
+218,Asparagopsis,1,0,1080
+338,Ascidians: Unstalked: Colonial,1,0,1074
+3157,Bryozoan Almond Zooid,1,0,1073
+3259,Neospongodes atlantica,1,0,1069
+2533,brown encrusting algae,1,0,1068
+708,Cystodytes lobatus,1,0,1068
+2124,Ectocarpus Lyngbye,1,1,1057
+3440,Deep Substrate,1,0,1054
+3799,Posidonia sp,1,0,1051
+2939,Macroalg: Large Canopy Forming: Phyllosphora,1,0,1044
+1267,CRED-Free-living hard coral,1,0,1043
+3246,Favia gravida,1,1,1038
+2013,Lyngbya spp.,1,0,1032
+871,Aiolochroia crassa,1,1,1027
+189,Seriatopora,1,1,1025
+1419,Massive colonies with invisible polyps,1,0,1016
+2435,Acropora valida,0,1,1014
+1743,Millepora complanata,1,0,1013
+412,Cvaginalis,1,1,1012
+58,Acanthastrea,1,1,1012
+3094,Table-like Hard Coral,1,0,1011
+3620,Colonial tunicate,1,0,1007
+413,Cplicifera,1,1,1007
+2960,White Space,1,0,1005
+2618,Thick Sediment Over Rock,1,0,997
+2545,Wand,1,0,995
+280,Sponges: Massive forms: Simple,1,0,995
+3593,Phycodrys quercifolia,1,0,992
+1868,Galaxaura sp.,1,1,989
+2026,Galaxaura rugosa,1,0,987
+638,Trash,1,1,986
+2485,Bleached Acropora,1,0,986
+1420,Massive colonies with visible polyps,1,0,977
+1722,Brachidontes pharaonis,1,1,968
+1126,Mobile fauna,1,0,965
+235,Corals: Stony corals: Tabulate,1,0,963
+2550,Red encrusting algae,1,0,960
+1791,Liagora,1,0,958
+1667,Desmarestia viridis (canopy)),0,1,956
+3858,CCA on dead massive coral,1,0,955
+3617,Sponge: Masive,1,0,946
+496,Amathia sp.,1,0,946
+1801,Limestone free of overgrowth,1,0,944
+509,Cladophora prolifera,1,0,941
+2779,Too Dark,1,0,941
+956,Erect coarse branching brown: Sargassum sp.,1,1,936
+923,Halichondria panicea,1,1,935
+2551,Green encrusting alga,1,0,935
+2933,Macroalgae:Erectcoarseb:brown:sargassum,1,0,935
+2631,Macroalgal Turf,1,0,927
+349,Echinoderms: Ophiuroids:Brittle / snake stars,1,0,920
+3395,Arbacia dufresnii,1,0,919
+411,Cdelitrix,1,1,919
+1355,CRED-Asparagopsis spp,1,1,919
+3871,Red CCA,1,0,914
+104,Octocorallia,1,1,912
+2032,Bleached Favia matthai,1,0,910
+980,Crambe Crambe,1,1,905
+3091,bleached algae,0,1,902
+266,Hydroids,1,0,901
+2842,Bleached Palisada perforata,0,1,900
+90,Porites irregularis,1,1,895
+3029,Thin Biotic Matrix,1,0,894
+1470,Asterias spp.,0,1,889
+3443,Gelidium spp,1,0,888
+577,Pododesmus macrochisma,1,0,887
+1163,Tripneustes gratilla,1,1,879
+765,Totally bleached Porites cylindrica,1,0,877
+2417,Echinothrix calamaris,1,1,872
+380,Dcylindrus,1,1,864
+1604,"Thin, Foliose, Plating: Other",1,1,859
+3292,Pavona Columnar,0,1,856
+1851,Cnidarian,1,0,850
+203,Bleached Acropora branching,1,0,847
+1131,"Red algae, thick branching",1,0,841
+192,Echinophyllia,1,1,836
+1383,Pseudoplexaura spp.,1,0,833
+3902,Pink CCA on dead encrusting coral,1,0,832
+1501,Ectopleura/Tubularia spp. (substratum),0,1,830
+3197,Red algae - filamentous,1,0,830
+3643,Unknown Invert,1,0,823
+3884,Pink branching CCA on dead branching coral,1,0,821
+3099,Bushy Hard Coral,1,0,818
+1828,Fungia scutaria,1,1,815
+2656,Rubble Peysso,1,1,813
+1258,Aplysina fulva_cauliformis,1,1,813
+1563,Platygyra lamellina,1,0,812
+77,Stylocoeniella,1,1,811
+2785,Turf On Pebbles,1,0,808
+255,Black/Octocorals (3D): non-fleshy: Bushy,1,0,805
+2155,Wood,1,1,800
+1589,Obelia spp. (canopy),0,1,799
+459,Millepora bleached,1,1,793
+1444,Calcifying algae: Other,1,0,784
+1404,Non hermatypic: Heliopora (Blue coral),1,0,783
+2157,Paramontastrea peresi,1,1,783
+3102,Lobate Soft Coral,1,0,780
+756,Kelp (unidentifed Laminariales),1,0,775
+1840,Bryozoan_branching,1,0,772
+1178,Madracis decacitis,1,1,771
+3107,Arborescent Soft Coral,1,0,768
+1654,Algae: Large Visible Globules,1,0,765
+511,Codium fragile,1,0,764
+3097,Columnar Hard Coral,1,0,760
+194,Mycedium,1,1,757
+2471,Stryphnus,1,0,756
+465,Dictyopteris,1,1,754
+3139,Spirorbinae,1,0,753
+1497,Didemnum spp. (native),1,1,751
+361,Worms: Polychaetes: Tube worms,1,0,750
+580,Psolus chitonodes,1,0,749
+1997,Gyrosmilia,1,0,748
+691,Balanophyllia elegans,1,0,742
+2167,Sponge - any,1,0,741
+649,axinella polypoides,1,0,738
+973,Chondrilla nucula,1,0,734
+3547,Rodolito Morto,0,1,733
+108,Meandroid (brain) corals,1,0,732
+313,Macroalgae: Erect fine branching,1,0,726
+738,Serpulid worms,1,0,718
+2882,Pachyseris plating,1,0,712
+808,Aglaophenia trifida,1,0,710
+1915,Bryopsis pennata,1,0,708
+3487,Codium vermilara/fragile,1,0,702
+497,Arbacia punculata,1,0,701
+1872,ARMS-CREP-Blue-green macroalga,1,0,701
+2826,Thalassia Testudinum,1,0,691
+2060,Bleaching encrusting Montipora,1,0,687
+407,Afistularis,1,1,686
+606,Acropora Plating,1,0,686
+148,Erect sponge,1,1,678
+802,Seagrasses: Elliptical Leaves,1,0,677
+2863,Macroalgae:ArticulatedCalcareous:Red:Amphiroa,1,0,674
+1718,Malleus regula,1,0,673
+3017,Sandy Turfy Biotic Matrix,1,0,672
+2434,Acropora squarrosa,0,1,668
+1717,Axinella sp,1,0,665
+64,Gardineroseris,1,1,663
+564,Blue-Green Algae,1,1,662
+2640,Lobed Macroalgae,1,0,662
+337,Ascidians: Unstalked: Solitary,1,0,658
+1446,Foliose Fan-shaped Macroalgae,1,0,655
+695,Cliona californiana,1,0,655
+1920,Caulerpa webbiana,1,0,655
+529,Upright sponge,1,0,652
+3634,Other coral or algae,1,0,650
+1310,CRED-Stylophora spp,1,1,636
+599,Pocillopora verrucosa,1,0,634
+640,Desmarestia sp.,1,0,631
+1544,Acropora downingi,1,0,630
+2193,Montipora patula bleached,1,1,629
+3538,CCA white to greenish,1,0,626
+382,Eusmilia fastigiata,1,1,622
+2416,Heterocentrotus mamillatus,1,1,618
+3295,Hard Coral plate,1,0,618
+1807,Silt/Clay,1,0,617
+145,Sea cucumber,1,1,616
+1996,Fragments of dead coral,1,0,613
+3798,Heterozostera tasmanica,1,0,611
+211,Bleached Echinopora,1,0,611
+1693,Unidentified green blade (substratum),0,1,608
+3897,Brown CCA on dead massive coral,1,0,606
+663,Red sponge,1,0,603
+3656,Schizobrachiella sanguinea,1,0,598
+3039,Branched algae,1,0,595
+1925,Halimeda dis_fra_gra_hed_opu_tun_vel,1,0,592
+191,Fungiidae,1,0,590
+136,Cladiella,1,0,583
+238,Corals: Stony corals: Foliose,1,0,583
+2464,"Porites compressa, recently dead",1,1,581
+3485,Undaria pinnatifida,1,0,578
+683,sarcotragus,1,0,578
+1800,Trididemnum spp.,1,0,573
+1455,"Sea cucumbers, sea urchins, sea stars, lobste",1,1,571
+542,Unknown Tunicate,1,0,571
+2654,Rubble CCA,1,0,571
+2965,Porites-mound,1,0,570
+3081,Echinometra viridis,1,0,569
+1865,Porites lichen,1,0,567
+1183,Meandrina meandrites,1,0,566
+3876,Fan Shape LOB/PAD,1,0,566
+3305,Rock Crustose Coralline Algae,1,0,566
+318,Macroalgae: Erect coarse branching green,1,0,557
+226,Bryzoa,1,0,552
+3878,Red Calcareous,1,0,549
+3638,Branching Soft Coral,1,0,548
+3141,Crucigera zygophora,1,0,546
+1928,Halimeda micronesica,1,0,545
+2627,Bare Pebbles,1,0,542
+414,Atubulata,1,1,541
+2040,Rhytisma,1,1,540
+512,Colpomenia sinuosa,1,1,539
+480,Ircinia campana,1,0,538
+2496,Bleached Favites,1,0,537
+1855,HC_dead,1,0,535
+1324,CRED-Brown macroalgae,1,1,535
+390,Mycetophyllia,1,1,529
+1108,"Serpulid worms, unidentified",1,0,526
+3014,Dead seagrass,1,0,524
+299,Macroalgae: Large canopy-forming : brown,1,0,522
+3251,Phyllogorgia dilatata,1,0,521
+541,Botrycladia occidentalis,1,0,519
+2520,Lithophyton,1,1,519
+2362,Turbinaria Encrusting,1,0,518
+3522,Ascidian colonial,1,0,515
+3658,Tubulipora plumosa,1,0,514
+481,Leptogorgia hebes,1,0,513
+3333,Sea Lettuce - Ulva Lactuca,1,0,512
+3101,Massive Soft Coral,1,0,512
+153,Encrusting Montipora,1,0,507
+336,Ascidians: Unstalked,1,1,502
+2966,Measuring Stick,1,0,502
+3619,Sponge: Tubular,1,0,499
+180,Mobile invertebrates,1,1,495
+1545,Acropora clathrata,1,0,493
+2575,Macrolagae all genera,1,0,493
+1799,Hydrozoan,1,1,491
+2186,Montipora flabellata bleached,1,0,489
+1876,ARMS-CREP-Dictyopteris/Dictyota spp,1,0,489
+274,Sponges: Massive forms: Mound,1,0,488
+1035,Psammocora stellata,1,1,487
+379,Dstokesi,1,1,486
+3883,Pink CCA on dead branching coral,1,0,486
+2436,Montipora danae,0,1,480
+3121,Stable Substrata,1,0,479
+65,Herpolitha,1,1,477
+1257,Sarcotragus spinosulus,1,0,471
+3677,Lithophyllum spp. Encrusting,1,0,467
+2964,Aplysina spp.,1,0,466
+1814,Amphibalanus amphitrite,0,1,463
+1158,"bryozoan, dead encrusting",1,0,461
+609,Plerogyra,1,0,459
+2798,Acanthophora nayadiformis,0,1,454
+3704,Sedentary Annelida Polychaeta,1,0,453
+2867,Macroalgae: Membraneous: Brown: Dictyota,1,0,448
+3868,Deep-pink CCA,1,0,447
+3100,Encrusting Soft Coral,1,0,444
+1736,Ircinia sp.,1,1,444
+2030,Ramicrusta spp.,1,0,443
+1360,Agaricia lamarcki,1,0,439
+565,Niphates digitalis,1,1,438
+632,Non-Acropora submassive,1,0,435
+489,Chondrosia_Didemnum,1,0,433
+1609,Dipsastraea,1,0,433
+670,yellow sponge,1,0,432
+3914,Red CCA on dead massive coral,1,0,431
+2169,Chirona hameri,1,0,428
+2035,Bleaching Favia stelligera,1,0,425
+2530,Brown turfing algae,1,0,419
+1041,Dictyosphaeria cavernosa,1,1,417
+405,Gneptuni,1,1,417
+3210,Zooanthid,1,0,417
+1469,Ascidiella aspersa,1,1,414
+1376,Siderastrea radians,1,0,414
+1677,Phyllophora/Chondrus (substratum),0,1,414
+3201,Red algae - branching,1,0,412
+1156,"Red algae, crustose coralline bleached/dead",1,0,411
+1138,"Green algae, unidentified",1,1,410
+432,Avrainvillea sp.,1,0,410
+3366,Recently Dead (LOF),1,0,409
+596,Algal Film,1,0,406
+3908,Pink CCA on dead columnar coral,1,0,403
+320,Macroalgae: Erect coarse branching red,1,0,401
+2544,Dead Gorgonian,1,0,397
+2374,Shade,1,0,396
+2586,Bleached Poritidae massive,1,0,396
+3437,Lettuce Coral,1,0,394
+3194,Cirripedia - Barnacle,1,0,394
+1034,Leptastrea purpurea,1,1,392
+1754,Non Hermatypic Heliopora,1,0,392
+2563,Unknown Algae,1,1,390
+1378,Stephanocoenia intersepta,1,0,386
+3117,Other Branching Bryozoan,1,0,384
+462,Mat tunicate,1,1,383
+3880,CCA on dead encrusting coral,1,0,383
+3591,Unknown macroalgae,1,0,380
+3247,Favia leptophylla,1,1,379
+2061,Bleaching foliose Montipora,1,0,379
+3887,Bright red CCA,1,0,373
+1922,Chlorodesmis fastigiata,1,0,373
+240,Corals: Stony corals: Digitate,1,0,372
+2602,Pocilloporidae Bleached (white),1,1,371
+2490,Bleached Pocillopora,1,0,370
+3666,Anomia ephippium,1,0,370
+2476,Penicillus spp.,1,0,367
+1101,"Tunicate, compound unidentified",1,0,366
+1760,unknown invertebrate eggs,1,1,365
+87,Blastomussa,1,0,365
+2094,CREP-T1 Soft Coral,1,0,365
+1888,ARMS-CREP-Mobile fauna,1,0,363
+3131,Clytia gracilis,1,0,357
+3925,Turf Algae on dead columnar coral,1,0,355
+1038,Mycale grandis,1,0,353
+684,black sponge,1,0,351
+112,Montastrea franksii,1,0,350
+297,Macroalgae: Sheet-like / membraneous: brown,1,0,350
+1583,Acanthastrea echinata,1,0,346
+2018,Hydrolithon reinboldii,1,0,346
+2216,Porites lobata tissue loss,1,1,344
+272,Sponges: Massive forms: Round,1,0,344
+2367,Bolt,0,1,344
+1579,Pavona decussata,1,0,343
+252,Corals: Black & Octocorals: Encrusting,1,0,340
+1857,Coral: Black/Octocorals: Massive soft corals,1,0,337
+2130,Sertularia sp.,1,0,337
+2219,CREP-T3a Amansia spp,1,0,334
+931,Macroalgae: Laminate: brown: Zonaria sp.,1,0,334
+971,Favites halicora,1,0,332
+3413,Pavona Submassive,0,1,331
+2495,Bleached Favia,1,0,330
+3163,Orange encrusting bryozoan 3,1,0,330
+2622,Biofilmed Rock,1,0,329
+2292,Favia Sub-massive,0,1,328
+3301,Soft Coral Leathery,1,0,328
+193,Oxypora,1,1,325
+202,Bleached Acropora tabulate,1,0,325
+228,Echinoderms,1,0,323
+1556,Cyphastrea serailia,1,0,322
+3913,Red CCA on dead encrusting coral,1,0,320
+3585,Cliona delitrix,1,0,319
+3244,Scolymia wellsi,1,1,318
+1892,ARMS-CREP-Gastropoda,1,1,317
+3870,Branching pink CCA,1,0,316
+302,Macroalgae: Laminate: green,1,0,316
+605,Acropora (encrusting),1,1,315
+1043,Unidentified Octocoral,1,0,313
+1502,Edwardsiella lineata (canopy),0,1,313
+955,Bugula californica,1,0,312
+486,Yellow digits,1,0,311
+1373,Pseudodiploria clivosa,1,0,309
+3707,Disporella sp.,1,0,306
+3269,Stypopodium zonale,1,1,305
+817,Plakortis,1,1,305
+231,Worms,1,0,305
+3376,Platygyra Massive,0,1,304
+2036,Bleaching Pocillopora eydouxi,1,0,304
+885,Tonicella spp.,1,1,304
+1686,Ulva spp. (canopy),0,1,304
+3515,Pocillopora aliciae,1,0,303
+2048,Podabacia,1,1,302
+1480,Bugula simplex (canopy),0,1,302
+3151,Crustose Corraline 2,1,0,300
+472,Paracyathus pulchellus_Phyllangia americana,1,0,298
+3918,Red branching CCA,1,0,298
+1993,Xestospongia aff. carbonaria,1,0,297
+2569,Porites nodular branches,1,0,297
+2090,Spondylus spiosus,1,0,295
+811,Halophila ovalis,1,1,293
+2717,1cm Sponge,1,0,293
+3907,Montipora millepora,1,0,289
+1005,Watersipora cucullata,0,1,289
+2977,Hydroides sp,1,0,289
+836,S. droebachiensis,1,0,287
+3192,Red algae - Crustose coralline algae,1,0,285
+3893,Pale yellow CCA on dead massive coral,1,0,284
+1046,Mytilus spp.,0,1,284
+1938,Acropora formosa (muricata) group,1,0,282
+2567,Epiphytic algae,1,0,282
+424,Chrysocystis fragilis,1,0,281
+2243,Epiphyte on eelgrass,0,1,281
+1534,Membranipora membranacea,0,1,280
+1282,CRED-Goniopora/Alveopora spp,1,0,278
+200,Symphyllia,1,1,275
+2351,Porites Sub-Massive,1,1,275
+2220,CREP-T3a Galaxaura spp,1,0,275
+1266,CRED-Columnar hard coral,1,0,273
+229,Molluscs,1,0,273
+3037,Tesseropora rosea,1,0,271
+3158,Bryozoan Ovoid Zooid,1,0,271
+1460,Astrangia poculata,0,1,270
+2951,Brown/Green Algal Crust,1,0,270
+1841,Bryozoan_encrusting,1,0,269
+2652,Foliose Peysso,1,0,269
+1633,Unidentified hydroid (canopy),0,1,268
+769,Bleached Stylophora pistillata (total),1,0,266
+1014,"Ascidian, unidentified",1,0,265
+1385,Plexaurella spp.,1,0,260
+1763,Bleached Favites pentagona,1,0,260
+3582,Stephanocoenia spp.,1,0,260
+3164,Upright Heavily Branched Structures,1,0,260
+2184,Montipora capitata tissue loss,1,0,259
+1529,Jassa marmorata,0,1,257
+2460,Agelas conifera/tubulata,1,0,256
+1190,Aplysina cauliformis,0,1,255
+1940,Acropora sp.,1,0,255
+219,Sarcomenia,1,0,255
+1651,Foliose Feathery Macro Algae,1,0,252
+316,Macroalgae: Erect fine branching brown,1,0,250
+2057,COT Scars,1,1,249
+3496,Terebellidae,1,0,248
+495,Symplegma sp.,1,0,248
+284,Sponges: Hollow forms,1,0,248
+2950,Foliose CCA,1,0,247
+552,Gooey Red Algae,1,0,245
+406,Aarcheri,1,1,243
+535,Black crust,1,0,243
+2143,Anadyomene stellata,1,0,242
+1893,ARMS-CREP-Hydrozoa,1,1,242
+4108,Sponge: massive violet,1,0,240
+281,Sponges: Massive forms: Barrels,1,1,240
+488,Botrylloides sp.,1,1,239
+241,Corals: Stony corals: Corymbose,1,0,239
+2538,Stypopodium spp.,1,0,238
+1961,Goniastrea edwardsi_retiformis,1,0,238
+3152,Crustose Corraline 3,1,0,238
+2147,Soft Bleached,1,0,237
+1313,CRED-Hydrocoral,1,1,236
+3133,Ascidia columbiana,1,0,236
+3447,Anthothoe chilensis,1,0,234
+561,Bright Orange Crust,1,0,234
+1511,Halichondria sp. (Blue),0,1,234
+3618,Sponge: Repent,1,0,233
+487,Aplidium sp.,1,0,232
+3872,Pale yellow CCA,1,0,232
+3162,Orange encrusting bryozoan 2,1,0,232
+2624,Biofilmed Rubble,1,1,231
+2801,Padina pavonica,0,1,231
+1937,Acropora robusta group,1,0,230
+2138,Scalebar,1,0,230
+1773,Dendrogyra cylindrus,1,0,230
+419,Palythoa sp,1,1,229
+3797,Amphibolis antarctica,1,0,228
+1507,Flabellina spp.,0,1,228
+3733,Undaria debris,1,0,227
+2427,Tubipora,1,1,226
+2576,Volcanic sediment,1,0,224
+560,Compressa Orange,1,0,222
+492,Schizoporella floridana,1,0,222
+1129,"Red algae, thin branching",1,0,222
+466,Halymenia floridana,1,0,221
+2969,Ectyoplasia,1,0,221
+586,Jointed Calcareous Algae,1,0,220
+206,Bleached Astreopora,1,0,219
+962,Molluscs: Snails,1,1,218
+294,Macroalgae: Sheet-like / membraneous,1,0,217
+2494,Bleached Pavona,1,0,217
+287,Sponges: Erect forms,1,0,217
+730,Opuntiella californica,1,0,217
+1600,Trash: Human Origin,1,0,216
+967,Champia/Lomentaria,1,0,216
+3923,Turf Algae on dead laminar coral,1,0,215
+1815,Ceramium sp.,1,0,213
+1762,Bleaching Hydnophora,1,0,213
+1538,Molgula spp.,0,1,213
+3489,Lissoclinum fragile,1,0,211
+1559,Plesiastrea versipora,1,0,211
+799,Ophlitaspongia pennata,1,0,210
+3368,Lobophora on Rubble,0,1,208
+3098,Foliose Hard Coral,1,0,208
+1901,ARMS-CREP-Hydrocoral,1,0,207
+373,Encrusting biota unknow,1,0,206
+1309,CRED-Psammocora spp,1,1,205
+3686,Didemnidae,1,0,205
+3875,Montipora foveolata,1,0,205
+1359,Agaricia grahamae,1,0,204
+2605,Poritidae massive Bleached (white),1,1,204
+1947,Pavona decussata_divaricata_frondifera,1,0,204
+1554,Favites acuticollis,1,0,203
+3630,Empty wall space,1,0,201
+1720,Chama pacifica,1,0,199
+1177,Porites divaricata,1,0,197
+2129,Oculina arbuscula,1,0,197
+508,Caulerpa racemosa,1,1,196
+2888,Carijoa,1,1,196
+3548,Outros,0,1,196
+1692,Unidentified green blade (canopy),0,1,195
+1298,CRED-Pachyseris spp,1,0,192
+1564,Turbinaria peltata,1,0,192
+3898,Brown CCA on dead encrusting coral,1,0,192
+475,Solenastrea hyades,1,0,191
+3586,Scopalina ruetzleri,1,0,191
+3120,Arborescent Hydrozoan,1,0,191
+3518,Astrea curta,1,0,189
+2648,Thick Branching Green Macroalgae,1,0,189
+2064,Montipora foliose,1,0,188
+3633,Abiotic,1,0,188
+3926,Branching pink CCA on dead massive coral,1,0,188
+2465,"Porites lobata, recently dead",1,1,187
+3824,Hyrtios sp.,1,0,187
+1969,Pocillopora ank_dan_ele_mea_set_ver,1,0,187
+2782,Thin Soft Octocoral,1,0,187
+3150,Crustose Corraline 1,1,0,187
+353,Molluscs: Gastropods,1,1,184
+482,Spirastrella sp.,1,0,184
+76,Sandolitha,1,1,184
+2825,Vermetus triquetrus (dead),0,1,184
+2074,Bleached Pocillopora damacornis,1,1,183
+951,Plocamium spp.,1,0,182
+3862,Neopetrosia,1,0,181
+3928,Pink branching CCA on dead tabular coral,1,0,181
+1576,Psammocora contigua,1,0,181
+234,Corals: Stony corals,1,0,180
+1515,Halisarca spp.,0,1,180
+1528,Isodictya spp. (substratum),0,1,180
+2415,Diadema paucispinum,1,1,179
+1122,"Barnacle, unidentified",1,0,179
+989,Antipatharia,1,0,179
+2293,Favites Sub-massive,0,1,178
+2201,Pocillopora meandrina bleached,1,1,177
+3108,Foliose Macroalgae,1,0,177
+1585,Hydnophora exesa,1,0,173
+3378,Porites porites dead,1,0,173
+665,yellow sponge encrasting,1,0,171
+1001,"Bryozoan, branching unidentified",1,0,170
+1824,Echinothrix diadema,1,0,169
+1822,sabellastarte spectabilis,1,0,168
+2055,Discosoma,1,1,166
+1775,Dichocoenia stokesi,1,0,166
+97,Non-Bio,1,0,165
+3068,WatSubLedge,1,0,165
+2836,Dry ulva,0,1,165
+3510,Damsel turf,1,0,164
+3154,Light Brown Crust,1,0,164
+3632,Coral from other experiment,1,0,163
+581,Sarcodiotheca gaudichaudii,1,0,163
+1566,Turbinaria reniformis,1,0,161
+1751,Hard Coral: Hispidose,1,0,161
+1465,Anomia/Heteranomia spp.,0,1,160
+344,Echinoderms: Sea stars,1,1,158
+397,Sintersepta,1,1,158
+1382,Plexaura spp.,1,0,158
+2033,Bleached Pocillopora meandrina,1,0,157
+1968,Galaxea fascicularis,1,0,157
+991,Idanthyrsus saxicavus,1,0,157
+1756,Unknown Sponge - White,0,1,157
+3873,Dark yellow CCA,1,0,156
+3594,Juvenile Undaria pinnatifida,1,0,155
+3105,Whip-like Soft Coral,1,0,155
+723,Heteropora pacifica,1,0,154
+1645,Psammocora albopicta,1,0,154
+3382,Halimeda discoidea,1,0,153
+3111,Articulated Calcareous Macroalgae,1,0,153
+2598,TFP: Visible Relief Structures Bleached,1,0,152
+1487,Ciona intestinalis,1,1,152
+1428,"Thin, Foliose, and Plating bleached",1,0,152
+1965,Dipsastraea spp.,1,0,151
+2626,Thin Turf/Biofilm on Rock,1,0,151
+3155,Dark Brown crust,1,0,151
+2206,Porites compressa algal overgrowth,1,0,150
+1656,Agarum clathratum (canopy),1,0,150
+2780,Motile Invertebrate,1,0,149
+2541,Udotea spp.,1,1,147
+693,Chelyosoma,1,0,145
+2133,Rhodymeniales Small Blade,1,0,144
+445,Porites duerdeni,1,0,143
+1949,Diploastrea heliopora,1,0,142
+1948,Pavona varians_venosa,1,0,142
+1721,Alectryonella plicatula,1,1,142
+615,Montipora Laminar without Ridges,1,0,140
+2497,Bleached Goniastrea,1,0,138
+3455,Detached Turbinaria,1,0,136
+2244,Erythrastrea,1,0,136
+328,Bryozoa: Soft,1,0,135
+2847,Macroalgae:Encrusting:Red:Non-calcareous,1,0,135
+3519,Porites heronensis,1,0,134
+3631,Power head pump,1,0,134
+3895,Pale yellow CCA on dead encrusting coral,1,0,134
+334,Bryozoa: hard: encrusting,1,0,133
+1806,Recently killed coral,1,0,133
+291,Sponges: Erect forms: Simple,1,0,133
+559,Shallow Orange,1,0,130
+3089,Hydroclathrus,1,0,129
+3205,Polychaete - tube worm,1,0,129
+2081,Bleaching Leptastrea,1,0,128
+3927,Plakortis lita,1,0,128
+1598,Calcifying Calcareous Crustose Algae: Sub,1,0,127
+3690,Ciona roulai,1,0,127
+4103,Acropora latistella,1,0,127
+2625,Biofilmed Pebbles,1,0,127
+315,Macroalgae: Erect fine branching green,1,0,125
+359,Crustacea: Barnacles: Acorn,1,0,125
+2579,Echinometra spp,1,0,125
+2889,Botrylloides,0,1,124
+2788,Turfy Biotic Matrix on Pebbles,1,0,123
+1942,Acropora hyacinthus group,1,0,122
+2783,Thick Soft Octocoral,1,0,122
+1646,Porites nodifera,1,0,121
+3104,Fan-shaped Soft Coral,1,0,121
+3497,Tegula patagonica,1,0,120
+3929,Turf algae on dead tabular coral,1,0,120
+3328,Dead coral with turf algae,1,0,118
+3877,Red Foliose,1,0,118
+1451,Leathery Macrophyte: Sargassum,1,0,118
+1792,Wrangelia,1,0,117
+3313,Macroalgae: Membraneous: Brown,1,0,117
+2797,Vermetus triquetrus,0,1,116
+2660,0mm Encrusting Sponge,1,0,116
+2621,Lightly Biofilmed Rock,1,1,115
+3812,Clathria sp.,1,0,114
+243,Corals: Stony corals: Solitary / mushroom,1,0,113
+3800,Seagrass wrack,1,0,113
+1518,Henricia sanguinolenta,0,1,113
+2148,Fungia Bleached,1,0,112
+308,Macroalgae: Globose / saccate green,1,0,112
+2610,PNG-Tunicate-Solitary,1,0,112
+443,Porites brighami,1,0,111
+3129,Bossiella Sp.,1,0,111
+2214,Porites lobata algal overgrowth,1,1,110
+707,Crisia spp.,1,0,110
+1557,Leptastrea transversa,1,1,110
+1574,Anomastraea irregularis,1,0,110
+3254,Hippodiplosia insculpta,1,0,110
+611,Astreopora (encrusting),1,1,109
+2039,Bleaching Pavona duerdeni,1,1,109
+3869,Pale Red CCA,1,0,109
+1679,Polysiphonia stricta (substratum),1,0,109
+2038,Bleaching Pavona varians,1,0,108
+2062,Bleaching Montastrea,1,0,108
+1137,Pseudochitinopoma occidentalis,1,0,107
+1144,"Brown algae, thin film",1,1,107
+2577,Diaddema,1,0,107
+2073,Bleached Montipora patula,1,0,106
+4100,Coscinoderma,1,0,106
+961,Molluscs: Limpets,0,1,106
+3383,Martensia Spp.,1,0,105
+3114,Branching-repent Sponge,1,0,105
+78,Tubastrea,1,1,104
+2156,Oyster Bag,0,1,104
+614,Montipora Laminar with Ridges,1,0,103
+2718,3cm Sponge,1,0,103
+3805,Zoopilus echinatus,1,0,102
+1036,Vermetidae,1,1,102
+195,Pectiniid - Unidentified Plating,1,0,102
+1590,Spionidae,0,1,101
+1622,Schizoporella unicornis,0,1,101
+114,Stephanocoenia michellini,1,1,100
+371,Substrate: Consolidated (hard) Cobbles,1,0,100
+1105,Serpula columbiana,1,0,100
