@@ -12,11 +12,9 @@ class Dataset(data.Dataset):
     status_root = os.path.join(data_root, 'status')
 
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),
         transforms.ToTensor(),
-        transforms.Normalize([0.49327573, 0.579955, 0.5280543],
-                             [0.21500333, 0.22538187, 0.22580335])  # To be changed
     ])
+    img_size = 224
 
     @classmethod
     def read_bool_status(cls, status_file):
@@ -65,8 +63,24 @@ class Dataset(data.Dataset):
         # shuffle here to have a bit of every class
         self.annotations = annotations
 
-    def __getitem__(self, item):
-        pass
+    def __getitem__(self, idx):
+        anno_dict = self.annotations[idx]
+        img = Image.open(anno_dict['img_path'])
+        img_width, img_height = img.size
+        left = anno_dict['row'] - int(self.img_size / 2)
+        upper = anno_dict['col'] - int(self.img_size / 2)
+        right = left + self.img_size
+        bottom = upper + self.img_size
+        # Invalid image if left or upper < 0
+        if left < 0 or upper < 0 or right > img_width or bottom > img_height:
+            return None
+        cropped_img = img.crop((left, upper, right, bottom))
+        cropped_img = self.transform(cropped_img)
+        anno_loaded = {
+            'img': cropped_img,
+            'class': anno_dict['class']
+        }
+        return anno_loaded
 
     def __len__(self):
-        pass
+        return len(self.annotations)
