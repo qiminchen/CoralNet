@@ -3,6 +3,7 @@ import os
 import time
 import copy
 import torch
+import torch.nn as nn
 import pandas as pd
 from tqdm import tqdm
 from options import options_train
@@ -10,6 +11,7 @@ import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
+from datasets.coralnet import collate_data
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
 
@@ -93,7 +95,7 @@ model = model.to(device)
 ###################################################
 
 print(str_stage, "Setting up optimizer")
-criterion = torch.nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
                              weight_decay=opt.wdecay)
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecaystep,
@@ -155,7 +157,8 @@ dataloaders = {
         shuffle=True,
         num_workers=opt.workers,
         pin_memory=True,
-        drop_last=True
+        drop_last=True,
+        collate_fn=collate_data,
     ),
     'valid': torch.utils.data.DataLoader(
         dataset['valid'],
@@ -163,7 +166,8 @@ dataloaders = {
         num_workers=opt.workers,
         pin_memory=True,
         drop_last=True,
-        shuffle=False
+        shuffle=True,
+        collate_fn=collate_data,
     ),
 }
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
@@ -181,37 +185,43 @@ running_loss = 0.0
 running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
-    for phase in ['train', 'valid']:
-        if phase == 'train':
-            lr_scheduler.step()
-            model.train()
-        else:
-            model.eval()
-        # Loss utility
-        metric_util = util_metric.MetricUtil()
-        # Progress bar
-        data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]), ncols=120)
-        for i, (inputs, labels) in enumerate(data):
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-            optimizer.zero_grad()
-            running_loss, running_accuracy = metric_util.compute_metric(
-                model, phase, inputs, labels, criterion, optimizer, i+1
-            )
-            # updating progress bar
-            data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
-                phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
-        # Save every epoch loss into .csv file
-        csv_logger.save([phase, initial_epoch, running_loss, running_accuracy])
-        # Save best model if exist
-        if phase == 'valid' and running_accuracy > best_accuracy:
-            best_accuracy = running_accuracy
-            best = copy.deepcopy(model.state_dict())
-            model_logger.save_state_dict(best, optimizer, filename='best.pt',
-                                         additional_values={'epoch': initial_epoch})
-        # Save validation ground truth and prediction
-        if phase == 'valid':
-            metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
+    # for phase in ['train', 'valid']:
+    if initial_epoch % opt.eval_every_train != 0:
+        phase = 'train'
+        lr_scheduler.step()
+        model.train()
+        epoch_batches = opt.batch_size * opt.epoch_batches
+    else:
+        phase = 'valid'
+        model.eval()
+        epoch_batches = opt.batch_size * opt.eval_batches
+    # Loss utility
+    metric_util = util_metric.MetricUtil()
+    # Progress bar
+    data = tqdm(dataloaders[phase], desc="Loss: ", total=epoch_batches, ncols=120)
+    for i, (inputs, labels) in enumerate(data):
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        optimizer.zero_grad()
+        running_loss, running_accuracy = metric_util.compute_metric(
+            model, phase, inputs, labels, criterion, optimizer, i+1
+        )
+        # updating progress bar
+        data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
+            phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
+        if i > epoch_batches:
+            break
+    # Save every epoch loss into .csv file
+    csv_logger.save([phase, initial_epoch, running_loss, running_accuracy])
+    # Save best model if exist
+    if phase == 'valid' and running_accuracy > best_accuracy:
+        best_accuracy = running_accuracy
+        best = copy.deepcopy(model.state_dict())
+        model_logger.save_state_dict(best, optimizer, filename='best.pt',
+                                     additional_values={'epoch': initial_epoch})
+    # Save validation ground truth and prediction
+    if phase == 'valid':
+        metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
     # save most recent model as checkpoint
     checkpoint = copy.deepcopy(model.state_dict())
     model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',

@@ -73,7 +73,7 @@ def add_general_arguments(parser):
                         help='weight decay')
     parser.add_argument('--lrdecay', type=float, default=0.1,
                         help='learning rate decay')
-    parser.add_argument('--lrdecaystep', type=int, default=3,
+    parser.add_argument('--lrdecaystep', type=int, default=100,
                         help='learning rate decay step size')
 
     # Logging and visualization
@@ -87,8 +87,8 @@ def add_general_arguments(parser):
                         help='Period of saving network weights')
     parser.add_argument('--save_net_opt', action='store_true',
                         help='Save optimizer state in regular network saving')
-    parser.add_argument('--vis_every_vali', default=1, type=int,
-                        help="Visualize every N epochs during validation")
+    parser.add_argument('--eval_every_train', default=10, type=int,
+                        help="Evaluate every N epochs during validation")
     parser.add_argument('--vis_every_train', default=1, type=int,
                         help="Visualize every N epochs during training")
     parser.add_argument('--vis_batches_vali', type=int, default=10,

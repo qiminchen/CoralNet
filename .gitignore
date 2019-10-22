@@ -1,3 +1,5 @@
 .DS_Store
 __pycache__
 .idea
+.ipynb_checkpoints
+data_analysis/.~lock.train_evaluate_sets.csv#

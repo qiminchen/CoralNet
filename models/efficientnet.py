@@ -152,7 +152,7 @@ class EfficientNet(nn.Module):
 
         # Head
         in_channels = block_args.output_filters  # output of final block
-        out_channels = round_filters(4096, self._global_params)
+        out_channels = round_filters(1280, self._global_params)
         self._conv_head = Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
         self._bn1 = nn.BatchNorm2d(num_features=out_channels, momentum=bn_mom, eps=bn_eps)
 
