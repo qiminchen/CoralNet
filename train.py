@@ -27,6 +27,9 @@ print(opt)
 print(str_stage, "Setting device")
 if opt.gpu == '-1':
     device = torch.device('cpu')
+elif opt.gpu == '-2':
+    device = -2
+    print("Use {} GPUs".format(torch.cuda.device_count()))
 else:
     os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
     device = torch.device('cuda')
@@ -90,7 +93,10 @@ print(str_stage, "Setting up models")
 model = models.get_model(opt)
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
-model = model.to(device)
+if opt.gpu == '-2':
+    model = nn.DataParallel(model)
+else:
+    model = model.to(device)
 
 ###################################################
 
