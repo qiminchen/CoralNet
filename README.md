@@ -2,7 +2,9 @@
 
 ## Cephfs
 
-`k create -f ./kubectl/cephfs_pvc.yml`
+```
+k create -f ./kubectl/cephfs_pvc.yml    # create only once and can delete when no needed anymore
+```
 
 ## Pod
 
@@ -23,6 +25,10 @@ k describe pod qic003-job               # get job/pod description
 k exec -it pod_name_in_this_job(qic003-job-zprb4) bash  # launch pod
 k delete job job_name(qic003-jod)       # delete pod, remember to delete job once training is finished
 ```
+
+## Docker image
+
+To be updated
 
 # CoralNet
 
