@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir=/mnt/sda/coral/result
+outdir=/mnt/pentagon/qic003/coralnet/result
 
 set -e
 
@@ -11,17 +11,14 @@ python train.py \
     --fine_tune \
     --dataset coralnet \
     --nclasses 1279 \
-    --gpu 0 \
+    --gpu -2 \
     --sets "source" \
-    --batch_size 4 \
-    --epoch_batches 2500 \
-    --eval_batches 1000 \
-    --eval_every_train 10 \
+    --batch_size 256 \
+    --eval_every_train 5 \
     --log_time \
     --optim adam \
     --lr 1e-3 \
-    --epoch 1000 \
-    --vis_batches_vali 10 \
-    --workers 4 \
+    --epoch 100 \
+    --workers 16 \
     --logdir "$outdir" \
     $*

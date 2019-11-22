@@ -11,7 +11,7 @@ import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
-from datasets.coralnet import collate_data
+# from datasets.coralnet import collate_data
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
 
@@ -28,7 +28,7 @@ print(str_stage, "Setting device")
 if opt.gpu == '-1':
     device = torch.device('cpu')
 elif opt.gpu == '-2':
-    device = -2
+    device = torch.device('cuda')
     print("Use {} GPUs".format(torch.cuda.device_count()))
 else:
     os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
@@ -39,7 +39,7 @@ else:
 
 print(str_stage, "Setting up logging directory")
 exprdir = '{}_{}_{}_{}'.format(opt.net, opt.net_version,
-                                   opt.dataset, opt.lr)
+                               opt.dataset, opt.lr)
 if opt.source is not None:
     exprdir = '{}_'.format(opt.source) + exprdir
 logdir = os.path.join(opt.logdir, exprdir, str(opt.expr_id))
@@ -95,8 +95,8 @@ print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
 if opt.gpu == '-2':
     model = nn.DataParallel(model)
-else:
-    model = model.to(device)
+
+model = model.to(device)
 
 ###################################################
 
@@ -164,7 +164,6 @@ dataloaders = {
         num_workers=opt.workers,
         pin_memory=True,
         drop_last=True,
-        collate_fn=collate_data,
     ),
     'valid': torch.utils.data.DataLoader(
         dataset['valid'],
@@ -172,8 +171,7 @@ dataloaders = {
         num_workers=opt.workers,
         pin_memory=True,
         drop_last=True,
-        shuffle=True,
-        collate_fn=collate_data,
+        shuffle=False,
     ),
 }
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
@@ -196,15 +194,13 @@ while initial_epoch <= opt.epoch:
         phase = 'train'
         lr_scheduler.step()
         model.train()
-        epoch_batches = opt.batch_size * opt.epoch_batches
     else:
         phase = 'valid'
         model.eval()
-        epoch_batches = opt.batch_size * opt.eval_batches
     # Loss utility
     metric_util = util_metric.MetricUtil()
     # Progress bar
-    data = tqdm(dataloaders[phase], desc="Loss: ", total=epoch_batches, ncols=120)
+    data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]), ncols=80)
     for i, (inputs, labels) in enumerate(data):
         inputs = inputs.to(device)
         labels = labels.to(device)
@@ -215,8 +211,6 @@ while initial_epoch <= opt.epoch:
         # updating progress bar
         data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
             phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
-        if i > epoch_batches:
-            break
     # Save every epoch loss into .csv file
     csv_logger.save([phase, initial_epoch, running_loss, running_accuracy])
     # Save best model if exist
