@@ -1,3 +1,29 @@
+# Nautilus
+
+## Cephfs
+
+`k create -f ./kubectl/cephfs_pvc.yml`
+
+## Pod
+
+```
+k create -f ./kubectl/pod_example.yml`  # create pod
+k get pods                              # get pod information
+k describe pod pod_name(qic003-pod)     # pod description
+k exec -it pod_name(qic003-pod) bash    # launch pod
+k delete pod pod_name(qic003-pod)       # delete pod
+```
+
+## Job
+
+```
+k create -f ./kubectl/job_example.yml   # create job
+k get jobs                              # get job information
+k describe pod qic003-job               # get job/pod description
+k exec -it pod_name_in_this_job(qic003-job-zprb4) bash  # launch pod
+k delete job job_name(qic003-jod)       # delete pod, remember to delete job once training is finished
+```
+
 # CoralNet
 
 ## Data
