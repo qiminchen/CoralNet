@@ -1,0 +1,80 @@
+apiVersion: batch/v1
+kind: Job # Job can use more resources. Pod can only get 2-gpu and 8G memory at most.
+metadata:
+  name: qic003-job
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: gpu-type
+                operator: In
+                values:
+                - 1080Ti
+                - 2080Ti
+                - V100
+                - titan-xp
+      containers:
+      - name: gpu-container
+        # securityContext:
+        #   privileged: true
+        #   capabilities:
+        #     add:
+        #       - SYS_ADMIN
+        #image: gitlab-registry.nautilus.optiputer.net/wex041/lab:maskrcnn-benchmark
+        # Use image from DockerHub as below since it is more stable.
+        image: xwjabc/lab:maskrcnn-benchmark
+        # https://stackoverflow.com/questions/33887194/how-to-set-multiple-commands-in-one-yaml-file-with-kubernetes
+        args: ["sleep", "infinity"]
+        volumeMounts:
+        - mountPath: /qic003
+          name: qic003
+        - mountPath: /dev/shm
+          name: dshm
+        resources:
+          limits:
+            memory: 16Gi
+            # nvidia.com/gpu: 4
+            cpu: "4"
+          requests:
+            memory: 8Gi
+            # nvidia.com/gpu: 4
+            cpu: "2"
+        # resources:  # For 4-GPU training.
+        #   limits:
+        #     memory: 96Gi
+        #     nvidia.com/gpu: 4
+        #     cpu: "32"
+        #   requests:
+        #     memory: 64Gi
+        #     nvidia.com/gpu: 4
+        #     cpu: "16"
+        # resources:  # For 1-GPU training.
+        #   limits:
+        #     memory: 24Gi
+        #     nvidia.com/gpu: 1
+        #     cpu: "8"
+        #   requests:
+        #     memory: 16Gi
+        #     nvidia.com/gpu: 1
+        #     cpu: "4"
+        # resources:  # For evaluation.
+        #   limits:
+        #     memory: 16Gi
+        #     nvidia.com/gpu: 1
+        #     cpu: "8"
+        #   requests:
+        #     memory: 12Gi
+        #     nvidia.com/gpu: 1
+        #     cpu: "4"
+      restartPolicy: Never
+      volumes:
+        - name: qic003
+          persistentVolumeClaim:
+            claimName: qic003
+        - name: dshm
+          emptyDir:
+            medium: Memory
