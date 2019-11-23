@@ -1,5 +1,11 @@
 # Nautilus
 
+## Upload file to S3
+
+```
+aws s3 sync /local/path/to/data s3://qic003/target/dir --profile prp  # specify user profile (check ~/.aws/cridential)
+```
+
 ## Cephfs
 
 ```
