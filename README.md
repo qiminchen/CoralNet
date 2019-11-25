@@ -34,8 +34,7 @@ k delete job job_name(qic003-jod)       # delete pod, remember to delete job onc
 
 ## Docker image
 
-Clone thie repo to target directory: `git clone https://github.com/qiminchen/CoralNet.git`
-
+Clone thie repo to target directory: `git clone https://github.com/qiminchen/CoralNet.git` \
 Create conda environment coralnet: `conda env create -f environment.yml`
 
 # CoralNet
