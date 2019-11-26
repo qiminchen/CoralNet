@@ -1,4 +1,4 @@
-name: coralnet_test
+name: coralnet
 channels:
   - anaconda
   - conda-forge
