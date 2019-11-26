@@ -32,11 +32,12 @@ k exec -it pod_name_in_this_job(qic003-job-zprb4) bash  # launch pod
 k delete job job_name(qic003-jod)       # delete pod, remember to delete job once training is finished
 ```
 
-## Docker image
+## Environment setup
 
-Clone thie repo to target directory: `git clone https://github.com/qiminchen/CoralNet.git` \
-Create conda environment coralnet: `conda env create -f environment.yml` \
-Export conda environment coralnet: `conda env export > environment.yml`
+Export conda environment coralnet: `conda env export > environment.yml  # only export once or environment changed`
+1. Create a Job on kubectl with computing resources
+2. Clone thie repo to target directory: `git clone https://github.com/qiminchen/CoralNet.git`
+3. Create conda environment coralnet: `conda env create -f environment.yml`
 
 # CoralNet
 
