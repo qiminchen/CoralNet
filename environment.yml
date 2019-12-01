@@ -11,7 +11,6 @@ dependencies:
   - blas=1.0=mkl
   - bleach=3.1.0=py37_0
   - boto3=1.10.19=py_0
-  - botocore=1.13.19=py_0
   - ca-certificates=2019.11.28=hecc5488_0
   - certifi=2019.11.28=py37_0
   - cffi=1.12.3=py37h2e261b9_0
@@ -128,4 +127,12 @@ dependencies:
   - zeromq=4.3.1=he6710b0_3
   - zlib=1.2.11=h7b6447c_3
   - zstd=1.3.7=h0b5b093_0
+  - pip:
+    - awscli==1.16.292
+    - awscli-plugin-endpoint==0.3
+    - botocore==1.13.28
+    - colorama==0.4.1
+    - pyasn1==0.4.8
+    - pyyaml==5.1.2
+    - rsa==3.4.2
 
