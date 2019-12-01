@@ -38,6 +38,22 @@ Export conda environment coralnet: `conda env export > environment.yml  # only e
 1. Create a Job on kubectl with computing resources
 2. Clone thie repo to target directory: `git clone https://github.com/qiminchen/CoralNet.git`
 3. Create conda environment coralnet: `conda env create -f environment.yml`
+4. Configure AWS: 
+```
+vim ~/.aws/credentials   # Open/create ~/.aws/credentials
+
+[default]                # Add the following aws credential to ~/.aws/credentials
+aws_access_key_id = xxx
+aws_secret_access_key = xxx
+
+# Run the following to add profile to ~/.aws/config
+
+aws configure set s3api.endpoint_url https://s3.nautilus.optiputer.net
+aws configure set s3.endpoint_url https://s3.nautilus.optiputer.net
+
+aws s3 ls s3://qic003/   # List dir to test s3 connection
+
+```
 
 # CoralNet
 
