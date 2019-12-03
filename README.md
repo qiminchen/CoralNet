@@ -40,19 +40,22 @@ Export conda environment coralnet: `conda env export > environment.yml  # only e
 3. Create conda environment coralnet: `conda env create -f environment.yml`
 4. Configure AWS: 
 ```
-conda activate coral
+NOTE: Do NOT recommend installing the awscli awscli-plugin-endpoint in local environment, instead 
+      install the awscli awscli-plugin-endpoint in conda environment
+
 pip install awscli awscli-plugin-endpoint
 aws configure set plugins.endpoint awscli_plugin_endpoint
+
 vim ~/.aws/credentials
 
 # Add profile to ~/.aws/credentials
-[prp]
+[default]
 aws_access_key_id = xxx
 aws_secret_access_key = xxx
 
 # Add profile to ~/.aws/config
-aws configure --profile prp set s3api.endpoint_url https://s3.nautilus.optiputer.net
-aws configure --profile prp set s3.endpoint_url https://s3.nautilus.optiputer.net
+aws configure set s3api.endpoint_url https://s3.nautilus.optiputer.net
+aws configure set s3.endpoint_url https://s3.nautilus.optiputer.net
 
 aws s3 ls s3://qic003/ --profile prp   # List dir to test s3 connection
 
