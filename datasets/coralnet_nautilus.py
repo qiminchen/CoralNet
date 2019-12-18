@@ -9,6 +9,7 @@ from torchvision import transforms
 import torch.utils.data as data
 import boto3
 from io import BytesIO
+from torch.utils.data.dataloader import default_collate
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -59,14 +60,23 @@ class Dataset(data.Dataset):
     def __getitem__(self, idx):
         image, label = self.samples[idx]
         image_object = self.bucket.Object(image)
-        img = Image.open(BytesIO(image_object.get()['Body'].read())).convert('RGB')
-        img = self.transform(img)
-        return img, label
+        try:
+            img = Image.open(BytesIO(image_object.get()['Body'].read())).convert('RGB')
+            img = self.transform(img)
+            return img, label
+        except Exception:
+            return None
 
     def __len__(self):
         return len(self.samples)
 
 
-# def collate_data(batch):
-#     images, labels = zip(*batch)
-#     return torch.cat(images), torch.cat(labels)
+def collate_data(batch):
+    # images, labels = zip(*batch)
+    len_batch = len(batch)
+    batch = list(filter(lambda x:x is not None, batch))
+    if len_batch > len(batch):
+        diff = len_batch - len(batch)
+        batch = batch + batch[:diff]
+    # return torch.cat(images), torch.cat(labels)
+    return default_collate(batch)
