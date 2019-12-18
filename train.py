@@ -11,7 +11,7 @@ import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
-# from datasets.coralnet import collate_data
+from datasets.coralnet_nautilus import collate_data
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
 
@@ -40,6 +40,7 @@ else:
 print(str_stage, "Setting up logging directory")
 exprdir = '{}_{}_{}_{}'.format(opt.net, opt.net_version,
                                opt.dataset, opt.lr)
+exprdir += ('_' + opt.suffix.format(**vars(opt))) if opt.suffix != '' else ''
 if opt.source is not None:
     exprdir = '{}_'.format(opt.source) + exprdir
 logdir = os.path.join(opt.logdir, exprdir, str(opt.expr_id))
@@ -102,10 +103,9 @@ model = model.to(device)
 
 print(str_stage, "Setting up optimizer")
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
-                             weight_decay=opt.wdecay)
-lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecaystep,
-                                               gamma=opt.lrdecay)
+optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum)
+# optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
+#                              weight_decay=opt.wdecay)
 
 ###################################################
 
@@ -164,6 +164,7 @@ dataloaders = {
         num_workers=opt.workers,
         pin_memory=True,
         drop_last=True,
+        collate_fn=collate_data,
     ),
     'valid': torch.utils.data.DataLoader(
         dataset['valid'],
@@ -172,6 +173,7 @@ dataloaders = {
         pin_memory=True,
         drop_last=True,
         shuffle=False,
+        collate_fn=collate_data,
     ),
 }
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
@@ -179,6 +181,9 @@ print(str_verbose, "Time spent in data IO initialization: %.2fs" %
 print(str_verbose, "# training points: " + str(len(dataset['train'])))
 print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
 print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
+
+lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01, epochs=opt.epoch,
+                                                   steps_per_epoch=len(dataloaders['train']))
 
 ###################################################
 
@@ -192,7 +197,6 @@ while initial_epoch <= opt.epoch:
     # for phase in ['train', 'valid']:
     if initial_epoch % opt.eval_every_train != 0:
         phase = 'train'
-        lr_scheduler.step()
         model.train()
     else:
         phase = 'valid'
@@ -208,6 +212,7 @@ while initial_epoch <= opt.epoch:
         running_loss, running_accuracy = metric_util.compute_metric(
             model, phase, inputs, labels, criterion, optimizer, i+1
         )
+        lr_scheduler.step()
         # updating progress bar
         data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
             phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
