@@ -182,7 +182,7 @@ print(str_verbose, "# training points: " + str(len(dataset['train'])))
 print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
 print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
 
-lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01, epochs=opt.epoch,
+lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, epochs=opt.epoch,
                                                    steps_per_epoch=len(dataloaders['train']))
 
 ###################################################
@@ -216,8 +216,14 @@ while initial_epoch <= opt.epoch:
         # updating progress bar
         data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
             phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
-    # Save every epoch loss into .csv file
-    csv_logger.save([phase, initial_epoch, running_loss, running_accuracy])
+        # save checkpoint every 100 batches
+        if i % 100 == 0:
+            # Save every 100 batch loss into .csv file
+            csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy])
+            # save most recent model as checkpoint
+            checkpoint = copy.deepcopy(model.state_dict())
+            model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',
+                                         additional_values={'epoch': initial_epoch})
     # Save best model if exist
     if phase == 'valid' and running_accuracy > best_accuracy:
         best_accuracy = running_accuracy
@@ -228,6 +234,7 @@ while initial_epoch <= opt.epoch:
     if phase == 'valid':
         metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
     # save most recent model as checkpoint
+    csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy])
     checkpoint = copy.deepcopy(model.state_dict())
     model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',
                                  additional_values={'epoch': initial_epoch})

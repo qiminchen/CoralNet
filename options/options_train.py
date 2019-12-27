@@ -65,6 +65,8 @@ def add_general_arguments(parser):
                         help='optimizer to use')
     parser.add_argument('--lr', type=float, default=1e-4,
                         help='learning rate')
+    parser.add_argument('--momentum', type=float, default=0.9,
+                        help='momentum of SGD')
     parser.add_argument('--adam_beta1', type=float, default=0.5,
                         help='beta1 of adam')
     parser.add_argument('--adam_beta2', type=float, default=0.9,

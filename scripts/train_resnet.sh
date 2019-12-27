@@ -14,11 +14,12 @@ python train.py \
     --gpu -2 \
     --sets "source" \
     --batch_size 64 \
-    --eval_every_train 5 \
+    --eval_every_train 2 \
+    --wdecay 3e-6 \
     --log_time \
-    --optim adam \
-    --lr 1e-3 \
+    --optim sgd \
+    --lr 1e-1 \
     --epoch 100 \
-    --workers 32 \
+    --workers 4 \
     --logdir "$outdir" \
     $*
