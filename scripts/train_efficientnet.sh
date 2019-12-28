@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir=/mnt/pentagon/qic003/coralnet/result
+outdir=../qic003/result
 
 set -e
 
@@ -9,7 +9,7 @@ python train.py \
     --net_version "b0" \
     --pretrained \
     --fine_tune \
-    --dataset coralnet \
+    --dataset coralnet_nautilus \
     --nclasses 1279 \
     --gpu -2 \
     --sets "source" \

@@ -217,7 +217,7 @@ while initial_epoch <= opt.epoch:
         data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
             phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
         # save checkpoint every 100 batches
-        if i % 100 == 0:
+        if i % 10 == 0:
             # Save every 100 batch loss into .csv file
             csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy])
             # save most recent model as checkpoint
