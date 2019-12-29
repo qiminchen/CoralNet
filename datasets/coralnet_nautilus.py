@@ -74,7 +74,7 @@ class Dataset(data.Dataset):
 def collate_data(batch):
     # images, labels = zip(*batch)
     len_batch = len(batch)
-    batch = list(filter(lambda x:x is not None, batch))
+    batch = list(filter(lambda x: x is not None, batch))
     if len_batch > len(batch):
         diff = len_batch - len(batch)
         batch = batch + batch[:diff]
