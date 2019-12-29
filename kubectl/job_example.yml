@@ -1,7 +1,8 @@
 apiVersion: batch/v1
 kind: Job # Job can use more resources. Pod can only get 2-gpu and 8G memory at most.
 metadata:
-  name: qic003-job
+  # name: qic003-job-efficientnet
+  name: qic003-job-resnet
 spec:
   template:
     spec:
@@ -13,22 +14,27 @@ spec:
               - key: gpu-type
                 operator: In
                 values:
-                - 1080Ti
+                # - 1080Ti
                 - 2080Ti
                 - V100
                 - titan-xp
+      restartPolicy: Never
       containers:
       - name: gpu-container
-        # securityContext:
-        #   privileged: true
-        #   capabilities:
-        #     add:
-        #       - SYS_ADMIN
-        #image: gitlab-registry.nautilus.optiputer.net/wex041/lab:maskrcnn-benchmark
-        # Use image from DockerHub as below since it is more stable.
-        image: xwjabc/lab:maskrcnn-benchmark
+        image: liam951120/coralnet:latest
         # https://stackoverflow.com/questions/33887194/how-to-set-multiple-commands-in-one-yaml-file-with-kubernetes
-        args: ["sleep", "infinity"]
+        # args: ["sleep", "infinity"]
+        command: ["/bin/bash", "-c"]
+        args:
+          - source ../miniconda/etc/profile.d/conda.sh;
+            conda activate coralnet;
+            cd ..;
+            cp -r qic003/CoralNet-master ./;
+            cd CoralNet-master/;
+            chmod +x scripts/train_resnet.sh;
+            ./scripts/train_resnet.sh --batch_size 96 --workers 24 --lr 1.0;
+#            chmod +x scripts/train_efficientnet.sh;
+#            ./scripts/train_efficientnet.sh --batch_size 156 --workers 48 --resume -1;
         volumeMounts:
         - mountPath: /qic003
           name: qic003
@@ -36,41 +42,13 @@ spec:
           name: dshm
         resources:
           limits:
-            memory: 16Gi
-            # nvidia.com/gpu: 4
-            cpu: "4"
+            memory: 56Gi
+            nvidia.com/gpu: 1
+            cpu: "16"
           requests:
-            memory: 8Gi
-            # nvidia.com/gpu: 4
-            cpu: "2"
-        # resources:  # For 4-GPU training.
-        #   limits:
-        #     memory: 96Gi
-        #     nvidia.com/gpu: 4
-        #     cpu: "32"
-        #   requests:
-        #     memory: 64Gi
-        #     nvidia.com/gpu: 4
-        #     cpu: "16"
-        # resources:  # For 1-GPU training.
-        #   limits:
-        #     memory: 24Gi
-        #     nvidia.com/gpu: 1
-        #     cpu: "8"
-        #   requests:
-        #     memory: 16Gi
-        #     nvidia.com/gpu: 1
-        #     cpu: "4"
-        # resources:  # For evaluation.
-        #   limits:
-        #     memory: 16Gi
-        #     nvidia.com/gpu: 1
-        #     cpu: "8"
-        #   requests:
-        #     memory: 12Gi
-        #     nvidia.com/gpu: 1
-        #     cpu: "4"
-      restartPolicy: Never
+            memory: 56Gi
+            nvidia.com/gpu: 1
+            cpu: "16"
       volumes:
         - name: qic003
           persistentVolumeClaim:
