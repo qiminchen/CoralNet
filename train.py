@@ -103,7 +103,8 @@ model = model.to(device)
 
 print(str_stage, "Setting up optimizer")
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum)
+optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum,
+                            weight_decay=opt.wdecay)
 # optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
 #                              weight_decay=opt.wdecay)
 
@@ -182,7 +183,8 @@ print(str_verbose, "# training points: " + str(len(dataset['train'])))
 print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
 print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
 
-lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, epochs=opt.epoch,
+lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=1, div_factor=20,
+                                                   final_div_factor=1e3, epochs=opt.epoch,
                                                    steps_per_epoch=len(dataloaders['train']))
 
 ###################################################
