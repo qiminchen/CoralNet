@@ -39,10 +39,11 @@ class ModelLogger(BaseLogger):
         self.state_dicts = dict()
         self.filepath = filepath
 
-    def save_state_dict(self, checkpoint, optimizer, filename, additional_values={}):
+    def save_state_dict(self, checkpoint, optimizer, lr_scheduler, filename, additional_values={}):
         # Update checkpoint to the most recent epoch and save
         self.state_dicts['net'] = checkpoint
         self.state_dicts['optimizer'] = optimizer.state_dict()
+        self.state_dicts['scheduler'] = lr_scheduler.state_dict()
         for k, v in additional_values.items():
             self.state_dicts[k] = v
         torch.save(self.state_dicts, os.path.join(self.filepath, filename))

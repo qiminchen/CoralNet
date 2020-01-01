@@ -110,47 +110,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum
 
 ###################################################
 
-print(str_stage, "Resuming model information")
-initial_epoch = 1
-if opt.resume == 0:
-    checkpoint = copy.deepcopy(model.state_dict())
-    best = copy.deepcopy(model.state_dict())
-    model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',
-                                 additional_values={'epoch': initial_epoch})
-    model_logger.save_state_dict(best, optimizer, filename='best.pt',
-                                 additional_values={'epoch': initial_epoch})
-else:
-    if opt.resume == -1:
-        net_filename = os.path.join(logdir, 'checkpoint.pt')
-    elif opt.resume == -2:
-        net_filename = os.path.join(logdir, 'best.pt')
-    else:
-        raise NotImplementedError(opt.resume)
-    if not os.path.isfile(net_filename):
-        print(str_warning, ("Network file not found for opt.resume=%d. "
-                            "Starting from scratch") % opt.resume)
-    else:
-        checkpoint, additional_values = model_logger.load_state_dict(net_filename)
-        model.load_state_dict(checkpoint['net'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        try:
-            initial_epoch += additional_values['epoch']
-        except KeyError as err:
-            # Old saved model does not have epoch as additional values
-            epoch_loss_csv = os.path.join(logdir, 'epoch_loss.csv')
-            if opt.resume == -1:
-                try:
-                    initial_epoch += pd.read_csv(epoch_loss_csv)['epoch'].max()
-                except pd.errors.ParserError:
-                    with open(epoch_loss_csv, 'r') as f:
-                        lines = f.readlines()
-                    initial_epoch += max([int(l.split(',')[0]) for l in lines[1:]])
-            else:
-                initial_epoch += opt.resume
-
-###################################################
-
-print(str_stage, "Setting up data loaders")
+print(str_stage, "Setting up data loaders and learning rate scheduler")
 start_time = time.time()
 Dataset = datasets.get_dataset(opt.dataset)
 dataset = {
@@ -189,6 +149,47 @@ lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=1, div_fact
 
 ###################################################
 
+print(str_stage, "Resuming model information")
+initial_epoch = 1
+if opt.resume == 0:
+    checkpoint = copy.deepcopy(model.state_dict())
+    best = copy.deepcopy(model.state_dict())
+    model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
+                                 additional_values={'epoch': initial_epoch})
+    model_logger.save_state_dict(best, optimizer, lr_scheduler, filename='best.pt',
+                                 additional_values={'epoch': initial_epoch})
+else:
+    if opt.resume == -1:
+        net_filename = os.path.join(logdir, 'checkpoint.pt')
+    elif opt.resume == -2:
+        net_filename = os.path.join(logdir, 'best.pt')
+    else:
+        raise NotImplementedError(opt.resume)
+    if not os.path.isfile(net_filename):
+        print(str_warning, ("Network file not found for opt.resume=%d. "
+                            "Starting from scratch") % opt.resume)
+    else:
+        checkpoint, additional_values = model_logger.load_state_dict(net_filename)
+        model.load_state_dict(checkpoint['net'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        lr_scheduler.load_state_dict(checkpoint['scheduler'])
+        try:
+            initial_epoch += additional_values['epoch']
+        except KeyError as err:
+            # Old saved model does not have epoch as additional values
+            epoch_loss_csv = os.path.join(logdir, 'epoch_loss.csv')
+            if opt.resume == -1:
+                try:
+                    initial_epoch += pd.read_csv(epoch_loss_csv)['epoch'].max()
+                except pd.errors.ParserError:
+                    with open(epoch_loss_csv, 'r') as f:
+                        lines = f.readlines()
+                    initial_epoch += max([int(l.split(',')[0]) for l in lines[1:]])
+            else:
+                initial_epoch += opt.resume
+
+###################################################
+
 print(str_stage, "Start training")
 assert opt.epoch > 0
 best_accuracy = 0.0
@@ -224,13 +225,13 @@ while initial_epoch <= opt.epoch:
             csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy])
             # save most recent model as checkpoint
             checkpoint = copy.deepcopy(model.state_dict())
-            model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',
+            model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
                                          additional_values={'epoch': initial_epoch})
     # Save best model if exist
     if phase == 'valid' and running_accuracy > best_accuracy:
         best_accuracy = running_accuracy
         best = copy.deepcopy(model.state_dict())
-        model_logger.save_state_dict(best, optimizer, filename='best.pt',
+        model_logger.save_state_dict(best, optimizer, lr_scheduler, filename='best.pt',
                                      additional_values={'epoch': initial_epoch})
     # Save validation ground truth and prediction
     if phase == 'valid':
@@ -238,7 +239,7 @@ while initial_epoch <= opt.epoch:
     # save most recent model as checkpoint
     csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy])
     checkpoint = copy.deepcopy(model.state_dict())
-    model_logger.save_state_dict(checkpoint, optimizer, filename='checkpoint.pt',
+    model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
                                  additional_values={'epoch': initial_epoch})
     initial_epoch += 1
 print("Best validation accuracy: {:.6f}".format(best_accuracy))
