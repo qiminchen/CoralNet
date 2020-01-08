@@ -143,8 +143,7 @@ print(str_verbose, "# training points: " + str(len(dataset['train'])))
 print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
 print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
 
-lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=1, div_factor=20,
-                                                   final_div_factor=1e3, epochs=opt.epoch,
+lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=opt.max_lr, epochs=opt.epoch,
                                                    steps_per_epoch=len(dataloaders['train']))
 
 ###################################################
@@ -197,49 +196,48 @@ running_loss = 0.0
 running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
-    # for phase in ['train', 'valid']:
-    if initial_epoch % opt.eval_every_train != 0:
-        phase = 'train'
-        model.train()
-    else:
-        phase = 'valid'
-        model.eval()
-    # Loss utility
-    metric_util = util_metric.MetricUtil()
-    # Progress bar
-    data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]), ncols=80)
-    for i, (inputs, labels) in enumerate(data):
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-        optimizer.zero_grad()
-        running_loss, running_accuracy = metric_util.compute_metric(
-            model, phase, inputs, labels, criterion, optimizer, i+1
-        )
-        lr_scheduler.step()
-        # updating progress bar
-        data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
-            phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
-        # save checkpoint every 100 batches
-        if i != 0 and i % 10000 == 0:
-            # Save every 100 batch loss into .csv file
-            csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy])
-            # save most recent model as checkpoint
-            checkpoint = copy.deepcopy(model.state_dict())
-            model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
+    for phase in ['train', 'valid']:
+        # if initial_epoch % opt.eval_every_train != 0:
+        if phase == 'train':
+            model.train()
+        else:
+            model.eval()
+        # Loss utility
+        metric_util = util_metric.MetricUtil()
+        # Progress bar
+        data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]), ncols=80)
+        for i, (inputs, labels) in enumerate(data):
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            optimizer.zero_grad()
+            running_loss, running_accuracy = metric_util.compute_metric(
+                model, phase, inputs, labels, criterion, optimizer, i+1
+            )
+            lr_scheduler.step()
+            # updating progress bar
+            data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
+                phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
+            # save checkpoint every 100 batches
+            if i != 0 and i % 10000 == 0:
+                # Save every 100 batch loss into .csv file
+                csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy])
+                # save most recent model as checkpoint
+                checkpoint = copy.deepcopy(model.state_dict())
+                model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
+                                             additional_values={'epoch': initial_epoch})
+        # Save best model if exist
+        if phase == 'valid' and running_accuracy > best_accuracy:
+            best_accuracy = running_accuracy
+            best = copy.deepcopy(model.state_dict())
+            model_logger.save_state_dict(best, optimizer, lr_scheduler, filename='best.pt',
                                          additional_values={'epoch': initial_epoch})
-    # Save best model if exist
-    if phase == 'valid' and running_accuracy > best_accuracy:
-        best_accuracy = running_accuracy
-        best = copy.deepcopy(model.state_dict())
-        model_logger.save_state_dict(best, optimizer, lr_scheduler, filename='best.pt',
+        # Save validation ground truth and prediction
+        if phase == 'valid':
+            metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
+        # save most recent model as checkpoint
+        csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy])
+        checkpoint = copy.deepcopy(model.state_dict())
+        model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
                                      additional_values={'epoch': initial_epoch})
-    # Save validation ground truth and prediction
-    if phase == 'valid':
-        metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
-    # save most recent model as checkpoint
-    csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy])
-    checkpoint = copy.deepcopy(model.state_dict())
-    model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
-                                 additional_values={'epoch': initial_epoch})
     initial_epoch += 1
 print("Best validation accuracy: {:.6f}".format(best_accuracy))

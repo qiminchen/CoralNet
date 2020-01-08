@@ -77,6 +77,8 @@ def add_general_arguments(parser):
                         help='learning rate decay')
     parser.add_argument('--lrdecaystep', type=int, default=100,
                         help='learning rate decay step size')
+    parser.add_argument('--max_lr', type=float, default=1e-1,
+                        help='max learning rate for one cycle policy')
 
     # Logging and visualization
     parser.add_argument('--logdir', type=str, default=None,
