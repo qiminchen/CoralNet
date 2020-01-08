@@ -14,7 +14,7 @@ from util.util_print import str_stage
 
 parser = argparse.ArgumentParser(description='Train Logistic Regression Classifier')
 parser.add_argument('source', type=str, help='Source to be evaluated')
-parser.add_argument('epochs', type=int, help='Number of epoch for training')
+parser.add_argument('--epochs', type=int, help='Number of epoch for training')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
