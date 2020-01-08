@@ -1,13 +1,23 @@
 import os
+import sys
 import json
 import time
 import random
+import argparse
 import numpy as np
 import boto3
 from io import BytesIO
 from sklearn.linear_model import SGDClassifier
 from sklearn.calibration import CalibratedClassifierCV
 from util.util_print import str_stage
+
+
+parser = argparse.ArgumentParser(description='Train Logistic Regression Classifier')
+parser.add_argument('source', type=str, help='Source to be evaluated')
+parser.add_argument('epochs', type=int, help='Number of epoch for training')
+
+argv = sys.argv[sys.argv.index("--") + 1:]
+args = parser.parse_args(argv)
 
 
 def train_classifier(source, epoch):
@@ -25,28 +35,28 @@ def train_classifier(source, epoch):
 
     # Read features list and is_train list
     #
-    train_list, test_list = _get_lists(source, bucket)
+    train_list, ref_list, test_list = _get_lists(source, bucket)
 
     # Identify classes common to both train and test. This will be our labelset for the training.
     #
-    classes = _get_classes(source, train_list, test_list, bucket)
+    classes = _get_classes(source, train_list, ref_list, test_list, bucket)
 
     # Train a classifier
     #
     start_time = time.time()
-    ok, clf, refacc = _do_training(source, train_list, epoch, classes, bucket)
+    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes, bucket)
     if not ok:
         return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     runtime = time.time() - start_time
 
     # Evaluate trained classifier
     #
-    _evaluate_classifier(source, clf, test_list, classes, bucket)
+    valacc = _evaluate_classifier(source, clf, test_list, classes, bucket)
 
-    return None
+    return {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc}
 
 
-def _do_training(source, train_list, epochs, classes, bucket):
+def _do_training(source, train_list, ref_list, epochs, classes, bucket):
     """
     :param bucket: S3 bucket
     :param train_list: training features filename list
@@ -55,14 +65,8 @@ def _do_training(source, train_list, epochs, classes, bucket):
     :return: True, calibrated classifier and training accuracy
     """
 
-    # Make train and ref split. Reference set is here a hold-out part of the train-data portion.
-    # Purpose of refset is to 1) know accuracy per epoch and 2) calibrate classifier output scores.
-    # We call it 'ref' to disambiguate from the actual validation set of the source.
-    ref_list = train_list[:5]
-    train_list = list(set(train_list) - set(ref_list))
-
     # Figure out # images per mini-batch and batches per epoch.
-    batch_size = min(len(train_list), 50)
+    batch_size = min(len(train_list), 200)
     n = int(np.ceil(len(train_list) / float(batch_size)))
     print(str_stage, "Training: batch size: {}, number of batch: {}".format(batch_size, n))
     class_dict = {classes[i]: i for i in range(len(classes))}
@@ -101,12 +105,17 @@ def _evaluate_classifier(source, clf, test_list, classes, bucket):
     """
 
     # Figure out # images per mini-batch and batches per epoch.
-    batch_size = min(len(test_list), 50)
+    batch_size = min(len(test_list), 100)
     n = int(np.ceil(len(test_list) / float(batch_size)))
     print(str_stage, "Testing: batch size: {}, number of batch: {}".format(batch_size, n))
+    class_dict = {classes[i]: i for i in range(len(classes))}
 
     print(str_stage, "Start training classifier")
     valacc = []
+    for i in range(n):
+        mini_batch = test_list[i*batch_size:(i+1)*batch_size]
+        x, y = _load_mini_batch(source, mini_batch, classes, class_dict, bucket)
+        valacc.append(_acc(y, clf.predict(x)))
 
     return valacc
 
@@ -122,7 +131,7 @@ def _load_data(source, xf, yf, classes, bucket):
     y = list(np.load(BytesIO(label_object.get()['Body'].read())))
 
     # Remove samples for which the label is not in classes
-    x, y = zip(*[(xm, ym) for xm, ym in zip(x, y) if y in classes])
+    x, y = zip(*[(xm, ym) for xm, ym in zip(x, y) if ym in classes])
     return list(x), list(y)
 
 
@@ -141,20 +150,24 @@ def _load_mini_batch(source, lst, classes, class_dict, bucket):
     return x, y
 
 
-def _get_classes(source, train_list, test_list, bucket):
+def _get_classes(source, train_list, ref_list, test_list, bucket):
+
+    def read(lst):
+        lst_classes = []
+        for l in lst:
+            npy = bucket.Object('features/' + source + '/images/' + l)
+            arr = list(np.load(BytesIO(npy.get()['Body'].read())))
+            lst_classes += arr
+        return lst_classes
+
     _, y_train_list = _split(train_list)
+    _, y_ref_list = _split(ref_list)
     _, y_test_list = _split(test_list)
-    y_train_classes = []
-    y_test_classes = []
-    for i in y_train_list:
-        npy_object = bucket.Object('features/' + source + '/images/' + i)
-        array = list(np.load(BytesIO(npy_object.get()['Body'].read())))
-        y_train_classes += array
-    for i in y_test_list:
-        npy_object = bucket.Object('features/' + source + '/images/' + i)
-        array = list(np.load(BytesIO(npy_object.get()['Body'].read())))
-        y_test_classes += array
-    classes = list(set(y_test_classes).intersection(set(y_train_classes)))
+    y_train_classes = read(y_train_list)
+    y_ref_classes = read(y_ref_list)
+    y_test_classes = read(y_test_list)
+    classes = list(set(y_test_classes).intersection(
+        set(y_train_classes), set(y_ref_classes)))
     return classes
 
 
@@ -175,13 +188,18 @@ def _get_lists(source, bucket):
     assert len(features_list) == len(is_train)
 
     # Training set and testing set split and shuffle
-    #
     train_list = [features_list[i] for i in range(len(features_list)) if is_train[i] is True]
     test_list = [features_list[i] for i in range(len(features_list)) if is_train[i] is False]
     random.shuffle(train_list)
     random.shuffle(test_list)
 
-    return train_list, test_list
+    # Make train and ref split. Reference set is here a hold-out part of the train-data portion.
+    # Purpose of refset is to 1) know accuracy per epoch and 2) calibrate classifier output scores.
+    # We call it 'ref' to disambiguate from the actual validation set of the source.
+    ref_list = train_list[:int(len(train_list)*0.1)]
+    train_list = list(set(train_list) - set(ref_list))
+
+    return train_list, ref_list, test_list
 
 
 def _split(lst):
@@ -201,11 +219,18 @@ def _acc(gt, pred):
     if not len(gt) == len(pred):
         raise ValueError('Input gt and pred must have the same length')
 
-    for g in gt:
-        if not isinstance(g, int):
-            raise TypeError('Input gt must be an array of ints')
-    for e in pred:
-        if not isinstance(e, int):
-            raise TypeError('Input pred must be an array of ints')
+    return float(np.sum(np.array(gt) == np.array(pred).astype(int)) / len(gt))
 
-    return float(np.sum(gt == pred) / len(gt))
+
+try:
+    status = train_classifier(args.source, args.epochs)
+except Exception as e:
+    status = {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
+    print("Failed to train source: {0}".format(args.source))
+    exit(1)
+
+log_dir = '../qic003/result/eval/' + args.source + '.json'
+with open(log_dir, 'w') as f:
+    json.dump(status, f)
+f.close()
+print('{} training completed!'.format(args.source))
