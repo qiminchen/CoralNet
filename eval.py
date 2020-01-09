@@ -15,6 +15,7 @@ from util.util_print import str_stage
 parser = argparse.ArgumentParser(description='Train Logistic Regression Classifier')
 parser.add_argument('source', type=str, help='Source to be evaluated')
 parser.add_argument('--epochs', type=int, help='Number of epoch for training')
+parser.add_argument('--outdir', type=str, help='Output directory')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
@@ -51,9 +52,10 @@ def train_classifier(source, epoch):
 
     # Evaluate trained classifier
     #
-    valacc = _evaluate_classifier(source, clf, test_list, classes, bucket)
+    gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, bucket)
+    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc}
 
-    return {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc}
+    return gt, pred, stat
 
 
 def _do_training(source, train_list, ref_list, epochs, classes, bucket):
@@ -111,13 +113,16 @@ def _evaluate_classifier(source, clf, test_list, classes, bucket):
     class_dict = {classes[i]: i for i in range(len(classes))}
 
     print(str_stage, "Start training classifier")
-    valacc = []
+    gt, pred, valacc = [], [], []
     for i in range(n):
         mini_batch = test_list[i*batch_size:(i+1)*batch_size]
         x, y = _load_mini_batch(source, mini_batch, classes, class_dict, bucket)
-        valacc.append(_acc(y, clf.predict(x)))
+        est = clf.predict(x)
+        gt.extend(y)
+        pred.extend(est)
+        valacc.append(_acc(y, est))
 
-    return valacc
+    return gt, pred, valacc
 
 
 def _chunkify(lst, n):
@@ -208,29 +213,34 @@ def _split(lst):
     return x, y
 
 
-def _acc(gt, pred):
+def _acc(gts, preds):
     """
-    :param gt: ground truth label
-    :param pred: prediction label
+    :param gts: ground truth label
+    :param preds: prediction label
     :return: accuracy
     """
-    if len(gt) == 0 or len(pred) == 0:
+    if len(gts) == 0 or len(preds) == 0:
         raise TypeError('Inputs can not be empty')
-    if not len(gt) == len(pred):
+    if not len(gts) == len(preds):
         raise ValueError('Input gt and pred must have the same length')
 
-    return float(np.sum(np.array(gt) == np.array(pred).astype(int)) / len(gt))
+    return float(np.sum(np.array(gts) == np.array(preds).astype(int)) / len(gts))
 
 
 try:
-    status = train_classifier(args.source, args.epochs)
+    gt, pred, status = train_classifier(args.source, args.epochs)
 except Exception as e:
-    status = {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
+    gt, pred, status = 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     print("Failed to train source: {0}".format(args.source))
     exit(1)
 
-log_dir = '../qic003/result/eval/' + args.source + '.json'
-with open(log_dir, 'w') as f:
+save_dir = args.outdir + args.source
+if not os.path.isdir(save_dir):
+    os.system('mkdir -p ' + save_dir)
+# Save status to json file
+with open(os.path.join(save_dir, 'status.json'), 'w') as f:
     json.dump(status, f)
 f.close()
+# Save ground truth label and predicted labels to numpy file
+np.savez(os.path.join(save_dir, 'output.npz'), gt=gt, pred=pred)
 print('{} training completed!'.format(args.source))
