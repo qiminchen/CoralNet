@@ -11,6 +11,7 @@ import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
+from torch.utils.tensorboard import SummaryWriter
 from datasets.coralnet_nautilus import collate_data
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
@@ -44,6 +45,7 @@ exprdir += ('_' + opt.suffix.format(**vars(opt))) if opt.suffix != '' else ''
 if opt.source is not None:
     exprdir = '{}_'.format(opt.source) + exprdir
 logdir = os.path.join(opt.logdir, exprdir, str(opt.expr_id))
+tensorboard_logdir = os.path.join(opt.logdir, exprdir, 'tensorboard')
 
 if opt.resume == 0:
     if os.path.isdir(logdir):
@@ -87,6 +89,7 @@ print(str_stage, "Setting up loggers")
 csv_logger = logger.CsvLogger(opt, os.path.join(logdir, 'epoch_loss.csv'))
 metric_logger = logger.StatisticLogger(logdir)
 model_logger = logger.ModelLogger(logdir)
+tensorboard_writer = SummaryWriter(tensorboard_logdir)
 
 ###################################################
 
@@ -197,6 +200,7 @@ running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
     for phase in ['train', 'valid']:
+        nbatch_loss, nbatch_acc, tlength = 0, 0, len(dataloaders[phase])
         # if initial_epoch % opt.eval_every_train != 0:
         if phase == 'train':
             model.train()
@@ -210,17 +214,26 @@ while initial_epoch <= opt.epoch:
             inputs = inputs.to(device)
             labels = labels.to(device)
             optimizer.zero_grad()
-            running_loss, running_accuracy = metric_util.compute_metric(
+            batch_loss, batch_acc, running_loss, running_accuracy = metric_util.compute_metric(
                 model, phase, inputs, labels, criterion, optimizer, i+1
             )
+            nbatch_loss += batch_loss
+            nbatch_acc += batch_acc
             lr_scheduler.step()
             # updating progress bar
             data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
                 phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
-            # save checkpoint every 100 batches
-            if i != 0 and i % 10000 == 0:
-                # Save every 100 batch loss into .csv file
-                csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy])
+            # save checkpoint every 10000 batches
+            # Save every 10000 cumulative batch loss into .csv file
+            if i % 10000 == 9999:
+                tlength -= 10000
+                tensorboard_writer.add_scalar('loss/' + phase, nbatch_loss / 10000,
+                                              initial_epoch * len(dataloaders[phase]) + i)
+                tensorboard_writer.add_scalar('acc/' + phase, nbatch_acc / 10000,
+                                              initial_epoch * len(dataloaders[phase]) + i)
+                csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy,
+                                 nbatch_loss / 10000, nbatch_acc / 10000])
+                nbatch_loss, nbatch_acc = 0, 0
                 # save most recent model as checkpoint
                 checkpoint = copy.deepcopy(model.state_dict())
                 model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
@@ -235,7 +248,11 @@ while initial_epoch <= opt.epoch:
         if phase == 'valid':
             metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
         # save most recent model as checkpoint
-        csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy])
+        assert tlength > 0 & tlength < 10000
+        tensorboard_writer.add_scalar('loss/' + phase, nbatch_loss / tlength, initial_epoch * len(dataloaders[phase]) + i)
+        tensorboard_writer.add_scalar('acc/' + phase, nbatch_acc / tlength, initial_epoch * len(dataloaders[phase]) + i)
+        csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy,
+                         nbatch_loss / tlength, nbatch_acc / tlength])
         checkpoint = copy.deepcopy(model.state_dict())
         model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
                                      additional_values={'epoch': initial_epoch})

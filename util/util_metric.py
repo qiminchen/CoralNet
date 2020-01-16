@@ -22,7 +22,9 @@ class MetricUtil:
                 self.pred += list(predicts.cpu().numpy())
                 self.gt += list(labels.cpu().numpy())
         # statistics
+        batch_loss = loss.item()
+        batch_acc = torch.sum(predicts == labels.data).item() / inputs.size(0)
         self.running_loss += loss.item()
         self.running_accuracy += torch.sum(predicts == labels.data)
-        return (self.running_loss / nbatch,
+        return (batch_loss, batch_acc, self.running_loss / nbatch,
                 self.running_accuracy.item() / (nbatch * inputs.size(0)))

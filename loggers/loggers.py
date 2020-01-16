@@ -22,7 +22,7 @@ class CsvLogger(BaseLogger):
             # create epoch_loss.csv
             with open(self.filename, 'a+', newline='') as cout:
                 writer = csv.DictWriter(
-                    cout, fieldnames=['phase', 'epoch', 'batch', 'loss', 'accuracy'])
+                    cout, fieldnames=['phase', 'epoch', 'batch', 'loss', 'accuracy', 'batch_loss', 'batch_acc'])
                 writer.writeheader()
             cout.close()
 
