@@ -11,7 +11,7 @@ import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 from datasets.coralnet_nautilus import collate_data
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
@@ -45,7 +45,7 @@ exprdir += ('_' + opt.suffix.format(**vars(opt))) if opt.suffix != '' else ''
 if opt.source is not None:
     exprdir = '{}_'.format(opt.source) + exprdir
 logdir = os.path.join(opt.logdir, exprdir, str(opt.expr_id))
-tensorboard_logdir = os.path.join(opt.logdir, exprdir, 'tensorboard')
+# tensorboard_logdir = os.path.join(opt.logdir, exprdir, 'tensorboard')
 
 if opt.resume == 0:
     if os.path.isdir(logdir):
@@ -89,7 +89,6 @@ print(str_stage, "Setting up loggers")
 csv_logger = logger.CsvLogger(opt, os.path.join(logdir, 'epoch_loss.csv'))
 metric_logger = logger.StatisticLogger(logdir)
 model_logger = logger.ModelLogger(logdir)
-tensorboard_writer = SummaryWriter(tensorboard_logdir)
 
 ###################################################
 
@@ -151,7 +150,7 @@ lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=opt.max_lr,
 
 ###################################################
 
-print(str_stage, "Resuming model information")
+print(str_stage, "Resuming model information and tensorboard")
 initial_epoch = 1
 if opt.resume == 0:
     checkpoint = copy.deepcopy(model.state_dict())
@@ -176,7 +175,9 @@ else:
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['scheduler'])
         try:
-            initial_epoch += additional_values['epoch']
+            epoch_loss_csv = os.path.join(logdir, 'epoch_loss.csv')
+            initial_epoch += pd.read_csv(epoch_loss_csv)['epoch'].max()
+            # initial_epoch += additional_values['epoch']
         except KeyError as err:
             # Old saved model does not have epoch as additional values
             epoch_loss_csv = os.path.join(logdir, 'epoch_loss.csv')
@@ -189,6 +190,8 @@ else:
                     initial_epoch += max([int(l.split(',')[0]) for l in lines[1:]])
             else:
                 initial_epoch += opt.resume
+
+# tensorboard_writer = SummaryWriter(tensorboard_logdir, purge_step=1)
 
 ###################################################
 
@@ -227,11 +230,11 @@ while initial_epoch <= opt.epoch:
             # Save every 10000 cumulative batch loss into .csv file
             if i % 10000 == 9999:
                 tlength -= 10000
-                tensorboard_writer.add_scalar('loss/' + phase, nbatch_loss / 10000,
-                                              initial_epoch * len(dataloaders[phase]) + i)
-                tensorboard_writer.add_scalar('acc/' + phase, nbatch_acc / 10000,
-                                              initial_epoch * len(dataloaders[phase]) + i)
-                csv_logger.save([phase, initial_epoch, i, running_loss, running_accuracy,
+                # tensorboard_writer.add_scalar('loss/' + phase, nbatch_loss / 10000,
+                #                               initial_epoch * len(dataloaders[phase]) + i)
+                # tensorboard_writer.add_scalar('acc/' + phase, nbatch_acc / 10000,
+                #                               initial_epoch * len(dataloaders[phase]) + i)
+                csv_logger.save([phase, initial_epoch, i+1, running_loss, running_accuracy,
                                  nbatch_loss / 10000, nbatch_acc / 10000])
                 nbatch_loss, nbatch_acc = 0, 0
                 # save most recent model as checkpoint
@@ -249,8 +252,10 @@ while initial_epoch <= opt.epoch:
             metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
         # save most recent model as checkpoint
         assert tlength > 0 & tlength < 10000
-        tensorboard_writer.add_scalar('loss/' + phase, nbatch_loss / tlength, initial_epoch * len(dataloaders[phase]) + i)
-        tensorboard_writer.add_scalar('acc/' + phase, nbatch_acc / tlength, initial_epoch * len(dataloaders[phase]) + i)
+        # tensorboard_writer.add_scalar('loss/' + phase, nbatch_loss / tlength,
+        #                               initial_epoch * len(dataloaders[phase]) + i)
+        # tensorboard_writer.add_scalar('acc/' + phase, nbatch_acc / tlength,
+        #                               initial_epoch * len(dataloaders[phase]) + i)
         csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy,
                          nbatch_loss / tlength, nbatch_acc / tlength])
         checkpoint = copy.deepcopy(model.state_dict())
