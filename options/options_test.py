@@ -9,8 +9,6 @@ def add_general_arguments(parser):
                         help='number of data loading workers')
     parser.add_argument('--batch_size', type=int, default=16,
                         help='training batch size')
-    parser.add_argument('--sets', type=str, default='source',
-                        help='using source dataset or target dataset')
 
     # Network name
     parser.add_argument('--net', type=str, required=True, default='efficientnet',
