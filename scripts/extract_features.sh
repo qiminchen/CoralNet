@@ -9,10 +9,9 @@ python extract.py \
     --net efficientnet \
     --net_version "b0" \
     --pretrained \
-    --dataset coralnet \
-    --source "s102" \
+    --dataset coralnet_extraction \
+    --source "s16" \
     --nclasses 9 \
-    --sets "source" \
     --gpu -1 \
     --batch_size 32 \
     --workers 4 \

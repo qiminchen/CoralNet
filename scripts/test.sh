@@ -8,7 +8,6 @@ python test.py \
     --net efficientnet \
     --net_version "b0" \
     --dataset coralnet \
-    --sets "source" \
     --nclasses 9 \
     --batch_size 32 \
     --workers 4 \

@@ -12,7 +12,6 @@ python train.py \
     --dataset coralnet_nautilus \
     --nclasses 1279 \
     --gpu -2 \
-    --sets "source" \
     --batch_size 72 \
     --wdecay 3e-6 \
     --log_time \
