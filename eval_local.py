@@ -29,38 +29,37 @@ def train_classifier(source, epoch):
     """
     print(str_stage, "Setting up")
 
-    # Setup aws S3 connection
+    # Data root directory
     #
-    s3 = boto3.resource('s3', endpoint_url="https://s3.nautilus.optiputer.net")
-    bucket = s3.Bucket('qic003')
+    data_root = '/media/qimin/seagate5tb/features'
 
     # Read features list and is_train list
     #
-    train_list, ref_list, test_list = _get_lists(source, bucket)
+    train_list, ref_list, test_list = _get_lists(source, data_root)
 
     # Identify classes common to both train and test. This will be our labelset for the training.
     #
-    classes = _get_classes(source, train_list, ref_list, test_list, bucket)
+    classes = _get_classes(source, train_list, ref_list, test_list, data_root)
 
     # Train a classifier
     #
     start_time = time.time()
-    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes, bucket)
+    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes, data_root)
     if not ok:
         return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     runtime = time.time() - start_time
 
     # Evaluate trained classifier
     #
-    gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, bucket)
+    gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, data_root)
     stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc}
 
     return gt, pred, classes, stat
 
 
-def _do_training(source, train_list, ref_list, epochs, classes, bucket):
+def _do_training(source, train_list, ref_list, epochs, classes, data_root):
     """
-    :param bucket: S3 bucket
+    :param data_root: data root directory
     :param train_list: training features filename list
     :param epochs: number of epoch for training
     :param classes: classes to be used
@@ -70,12 +69,13 @@ def _do_training(source, train_list, ref_list, epochs, classes, bucket):
     # Figure out # images per mini-batch and batches per epoch.
     batch_size = min(len(train_list), 200)
     n = int(np.ceil(len(train_list) / float(batch_size)))
-    print(str_stage, "Training: batch size: {}, number of batch: {}".format(batch_size, n))
     class_dict = {classes[i]: i for i in range(len(classes))}
     unique_class = list(range(len(classes)))
+    print(str_stage, "Training: batch size: {}, number of batch: {} with {} classes".format(
+        batch_size, n, len(classes)))
 
     # Load reference data (must hold in memory for the calibration).
-    x_ref, y_ref = _load_mini_batch(source, ref_list, classes, class_dict, bucket)
+    x_ref, y_ref = _load_mini_batch(source, ref_list, classes, class_dict, data_root)
 
     # Initialize classifier and refset accuracy list
     print(str_stage, "Start training classifier")
@@ -85,7 +85,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, bucket):
         random.shuffle(train_list)
         mini_batches = _chunkify(train_list, n)
         for mb in mini_batches:
-            x, y = _load_mini_batch(source, mb, classes, class_dict, bucket)
+            x, y = _load_mini_batch(source, mb, classes, class_dict, data_root)
             clf.partial_fit(x, y, classes=unique_class)
         refacc.append(_acc(y_ref, clf.predict(x_ref)))
 
@@ -96,13 +96,13 @@ def _do_training(source, train_list, ref_list, epochs, classes, bucket):
     return True, clf, refacc
 
 
-def _evaluate_classifier(source, clf, test_list, classes, bucket):
+def _evaluate_classifier(source, clf, test_list, classes, data_root):
     """
     :param source: source to be evaluated
     :param clf: trained classifier
     :param test_list: testing features filename list
     :param classes: classes to be used
-    :param bucket: S3 bucket
+    :param data_root: data root directory
     :return: evaluation accuracy
     """
 
@@ -116,7 +116,7 @@ def _evaluate_classifier(source, clf, test_list, classes, bucket):
     gt, pred, valacc = [], [], []
     for i in range(n):
         mini_batch = test_list[i*batch_size:(i+1)*batch_size]
-        x, y = _load_mini_batch(source, mini_batch, classes, class_dict, bucket)
+        x, y = _load_mini_batch(source, mini_batch, classes, class_dict, data_root)
         est = clf.predict(x)
         gt.extend(y)
         pred.extend(est)
@@ -129,18 +129,17 @@ def _chunkify(lst, n):
     return [lst[i::n] for i in range(n)]
 
 
-def _load_data(source, xf, yf, classes, bucket):
-    feature_object = bucket.Object('features/' + source + '/images/' + xf)
-    x = json.load(BytesIO(feature_object.get()['Body'].read()))
-    label_object = bucket.Object('features/' + source + '/images/' + yf)
-    y = list(np.load(BytesIO(label_object.get()['Body'].read())))
+def _load_data(source, xf, yf, classes, data_root):
+    with open(os.path.join(data_root, source, 'images', xf), 'r') as f:
+        x = json.load(f)
+    y = list(np.load(os.path.join(data_root, source, 'images', yf)))
 
     # Remove samples for which the label is not in classes
     x, y = zip(*[(xm, ym) for xm, ym in zip(x, y) if ym in classes])
     return list(x), list(y)
 
 
-def _load_mini_batch(source, lst, classes, class_dict, bucket):
+def _load_mini_batch(source, lst, classes, class_dict, data_root):
     """
     :param lst: filename list to be loaded
     :return: numpy array features and labels
@@ -148,20 +147,20 @@ def _load_mini_batch(source, lst, classes, class_dict, bucket):
     x_list, y_list = _split(lst)
     x, y = [], []
     for i in range(len(x_list)):
-        thisx, thisy = _load_data(source, x_list[i], y_list[i], classes, bucket)
+        thisx, thisy = _load_data(source, x_list[i], y_list[i], classes, data_root)
         x.extend(thisx)
         y.extend(thisy)
     y = [class_dict[i] for i in y]
     return x, y
 
 
-def _get_classes(source, train_list, ref_list, test_list, bucket):
+def _get_classes(source, train_list, ref_list, test_list, data_root):
 
     def read(lst):
         lst_classes = []
         for l in lst:
-            npy = bucket.Object('features/' + source + '/images/' + l)
-            arr = list(np.load(BytesIO(npy.get()['Body'].read())))
+            npy = os.path.join(data_root, source, 'images', l)
+            arr = list(np.load(npy))
             lst_classes += arr
         return lst_classes
 
@@ -176,19 +175,21 @@ def _get_classes(source, train_list, ref_list, test_list, bucket):
     return classes
 
 
-def _get_lists(source, bucket):
+def _get_lists(source, data_root):
     """
     :param source: source to be evaluated
-    :param bucket: aws s3 bucket
+    :param data_root: data root directory
     :return: training set and testing set filename lists
     """
-    features_bucket = bucket.Object('features/' + source + '/features_all.txt')
-    features_list = features_bucket.get()['Body'].read().decode('utf-8')
-    features_list = features_list.split('\n')
+    with open(os.path.join(data_root, source, 'features_all.txt'), 'r') as file:
+        line = file.read()
+    file.close()
+    features_list = line.split('\n')
 
-    is_train_bucket = bucket.Object('features/' + source + '/is_train1.txt')
-    is_train = is_train_bucket.get()['Body'].read().decode('utf-8')
-    is_train = [x == 'True' for x in is_train.split('\n')]
+    with open(os.path.join(data_root, source, 'is_train1.txt'), 'r') as file:
+        line = file.read()
+    file.close()
+    is_train = [x == 'True' for x in line.split('\n')]
 
     assert len(features_list) == len(is_train)
 
@@ -227,12 +228,13 @@ def _acc(gts, preds):
     return float(np.sum(np.array(gts) == np.array(preds).astype(int)) / len(gts))
 
 
-try:
-    gt, pred, cls, status = train_classifier(args.source, args.epochs)
-except Exception as e:
-    gt, pred, cls, status = 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
-    print("Failed to train source: {0}".format(args.source))
-    exit(1)
+gt, pred, cls, status = train_classifier(args.source, args.epochs)
+# try:
+#     gt, pred, cls, status = train_classifier(args.source, args.epochs)
+# except Exception as e:
+#     gt, pred, cls, status = 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
+#     print("Failed to train source: {}, {}".format(args.source, e))
+#     exit(1)
 
 save_dir = args.outdir + args.source
 if not os.path.isdir(save_dir):
