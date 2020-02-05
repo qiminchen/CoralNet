@@ -6,10 +6,10 @@ import time
 import torch
 import models
 import datasets
+import torch.nn as nn
 from tqdm import tqdm
-import loggers.loggers as logger
 from options import option_extract
-from util.util_extract import ExtractFeature
+from collections import OrderedDict
 from util.util_print import str_stage, str_verbose, str_warning
 
 ###################################################
@@ -57,65 +57,52 @@ print(str_verbose, "Saving directory set to: %s" % logdir)
 
 ###################################################
 
-print(str_stage, "Setting up feature loggers")
-feature_logger = logger.FeatureLogger(logdir)
-
-###################################################
-
 print(str_stage, "Setting up models")
 model = models.get_model(opt)
 state_dicts = torch.load(opt.net_path, map_location=device)
-model.load_state_dict(state_dicts['net'])
+# original saved file with DataParallel
+# create new OrderedDict that does not contain `module.
+# ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+new_state_dict = OrderedDict()
+for k, v in state_dicts['net'].items():
+    name = k[7:]
+    new_state_dict[name] = v
+model.load_state_dict(new_state_dict)
 for param in model.parameters():
     param.requires_grad = False
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
+# remove _fc layer
+model = nn.Sequential(*list(model.children())[:-1])
 model = model.to(device)
-extractor = ExtractFeature(model)
-# Use model.extract_features(input) to extract features
 
 ###################################################
 
-print(str_stage, "Setting up data loaders")
+print(str_stage, "Setting up data loaders for source: {}".format(opt.source))
 start_time = time.time()
 Dataset = datasets.get_dataset(opt.dataset)
-dataset = {
-    'train': Dataset(opt, mode='train'),
-    'valid': Dataset(opt, mode='valid')
-}
-dataloaders = {
-    'train': torch.utils.data.DataLoader(
-        dataset['train'],
+dataset = Dataset(opt, local=False)
+dataloaders = torch.utils.data.DataLoader(
+        dataset,
         batch_size=opt.batch_size,
         shuffle=True,
         num_workers=opt.workers,
         pin_memory=True,
         drop_last=True
-    ),
-    'valid': torch.utils.data.DataLoader(
-        dataset['valid'],
-        batch_size=opt.batch_size,
-        num_workers=opt.workers,
-        pin_memory=True,
-        drop_last=True,
-        shuffle=False
-    ),
-}
+    )
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
       (time.time() - start_time))
-print(str_verbose, "# training points: " + str(len(dataset['train'])))
-print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
-print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
+print(str_verbose, "# extracting points: " + str(len(dataset)))
+print(str_verbose, "# extracting batches in total: " + str(len(dataloaders)))
+exit()
 
 ###################################################
 
 print(str_stage, "Start extracting features")
-for phase in ['train', 'valid']:
-    data = tqdm(dataloaders[phase], total=len(dataloaders[phase]), ncols=120)
-    for inputs, labels in data:
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-        with torch.no_grad():
-            extractor.extract(inputs, labels)
-    feature_logger.save_feature(extractor.features, extractor.labels, phase)
+data = tqdm(dataloaders, total=len(dataloaders), ncols=120)
+for anns_dict in data:
+    inputs = anns_dict['anns_loaded'][0].to(device)
+    labels = anns_dict['anns_labels'][0].to(device)
+    with torch.no_grad():
+        pass
 print(str_verbose, "{} feature extraction finished!".format(opt.source))
