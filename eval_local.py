@@ -40,6 +40,9 @@ def train_classifier(source, epoch):
     # Identify classes common to both train and test. This will be our labelset for the training.
     #
     classes = _get_classes(source, train_list, ref_list, test_list, data_root)
+    with open(os.path.join(data_root, source, 'labels.json'), 'r') as f:
+        source_classes = json.load(f)
+    classes = list(set(classes).intersection(set(source_classes)))
 
     # Train a classifier
     #
@@ -71,14 +74,13 @@ def _do_training(source, train_list, ref_list, epochs, classes, data_root):
     n = int(np.ceil(len(train_list) / float(batch_size)))
     class_dict = {classes[i]: i for i in range(len(classes))}
     unique_class = list(range(len(classes)))
-    print(str_stage, "Training: batch size: {}, number of batch: {} with {} classes".format(
-        batch_size, n, len(classes)))
+    print(str_stage, "Start training {}: number of images: {}, number of batch: {}, classes: {}".format(
+        source, len(train_list), n, len(classes)))
 
     # Load reference data (must hold in memory for the calibration).
     x_ref, y_ref = _load_mini_batch(source, ref_list, classes, class_dict, data_root)
 
     # Initialize classifier and refset accuracy list
-    print(str_stage, "Start training classifier")
     clf = SGDClassifier(loss='log', average=True)
     refacc = []
     for epoch in range(epochs):
@@ -112,7 +114,6 @@ def _evaluate_classifier(source, clf, test_list, classes, data_root):
     print(str_stage, "Testing: batch size: {}, number of batch: {}".format(batch_size, n))
     class_dict = {classes[i]: i for i in range(len(classes))}
 
-    print(str_stage, "Start training classifier")
     gt, pred, valacc = [], [], []
     for i in range(n):
         mini_batch = test_list[i*batch_size:(i+1)*batch_size]
@@ -135,7 +136,12 @@ def _load_data(source, xf, yf, classes, data_root):
     y = list(np.load(os.path.join(data_root, source, 'images', yf)))
 
     # Remove samples for which the label is not in classes
-    x, y = zip(*[(xm, ym) for xm, ym in zip(x, y) if ym in classes])
+    # Check if list of tuple is empty of not
+    lot = list(zip(*[(xm, ym) for xm, ym in zip(x, y) if ym in classes]))
+    if lot:
+        x, y = lot
+    else:
+        x, y = [], []
     return list(x), list(y)
 
 
@@ -186,7 +192,7 @@ def _get_lists(source, data_root):
     file.close()
     features_list = line.split('\n')
 
-    with open(os.path.join(data_root, source, 'is_train1.txt'), 'r') as file:
+    with open(os.path.join(data_root, source, 'is_train.txt'), 'r') as file:
         line = file.read()
     file.close()
     is_train = [x == 'True' for x in line.split('\n')]
@@ -228,13 +234,12 @@ def _acc(gts, preds):
     return float(np.sum(np.array(gts) == np.array(preds).astype(int)) / len(gts))
 
 
-gt, pred, cls, status = train_classifier(args.source, args.epochs)
-# try:
-#     gt, pred, cls, status = train_classifier(args.source, args.epochs)
-# except Exception as e:
-#     gt, pred, cls, status = 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
-#     print("Failed to train source: {}, {}".format(args.source, e))
-#     exit(1)
+try:
+    gt, pred, cls, status = train_classifier(args.source, args.epochs)
+except Exception as e:
+    gt, pred, cls, status = 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
+    print("Failed to train source: {}, {}".format(args.source, e))
+    exit(1)
 
 save_dir = args.outdir + args.source
 if not os.path.isdir(save_dir):
