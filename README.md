@@ -66,6 +66,21 @@ aws s3 sync s3://qic003/CoralNet ./qic003
 
 # CoralNet
 
+## Extract features
+
+```
+cd ../CoralNet/
+./scripts/extract_features.sh --net resnet --net_version "resnet50" --net_path /path/to/well/trained/model --source "sxxx" --logdir /path/to/save/features/dir
+```
+
+## Train Logistic Regression classifier
+
+NOTE that `outdir` in `extract_features.py` has to be the same as `data_root` in `eval_local.py` for evaluating the new CoralNet purpose.
+```
+cd ../CoralNet/
+./scripts/eval.sh --outdir ../path/to/save/training/status/dir --epochs 10
+```
+
 ## Data
 
 ### Organization
