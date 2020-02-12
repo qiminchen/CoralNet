@@ -77,11 +77,18 @@ For 1 8GB RAM CPU and 1 1080ti GPU, the maximum batch size that fills up GPU mem
 
 # CoralNet
 
+## Train models
+
+```
+cd ../CoralNet/
+./scripts/train.sh --net resnet --net_version "resnet50" --nclasses 1279 --max_lr 0.1 --batch_size 64 --workers 24 --epoch 10 --logdir /path/to/log
+```
+
 ## Extract features
 
 ```
 cd ../CoralNet/
-./scripts/extract_features.sh --net resnet --net_version "resnet50" --net_path /path/to/well/trained/model --source "sxxx" --logdir /path/to/save/features/dir
+./scripts/extract.sh --net resnet --net_version "resnet50" --net_path /path/to/well/trained/model --source "sxxx" --logdir /path/to/save/features/dir
 ```
 
 ## Train Logistic Regression classifier
@@ -89,7 +96,7 @@ cd ../CoralNet/
 NOTE that `outdir` in `extract_features.py` has to be the same as `data_root` in `eval_local.py` for evaluating the new CoralNet purpose.
 ```
 cd ../CoralNet/
-./scripts/eval.sh --outdir ../path/to/save/training/status/dir --epochs 10
+./scripts/eval.sh
 ```
 
 ## Data
