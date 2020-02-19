@@ -39,13 +39,14 @@ print(str_stage, "Setting up models")
 model = models.get_model(opt)
 state_dicts = torch.load(opt.net_path, map_location=device)
 # original saved file with DataParallel
-# create new OrderedDict that does not contain `module.
+# create new OrderedDict that does not contain `module`.
 # ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
-new_state_dict = OrderedDict()
+new_state_dicts = OrderedDict()
 for k, v in state_dicts['net'].items():
     name = k[7:]
-    new_state_dict[name] = v
-model.load_state_dict(new_state_dict)
+    # name = k.replace(".module", "")
+    new_state_dicts[name] = v
+model.load_state_dict(new_state_dicts)
 for param in model.parameters():
     param.requires_grad = False
 print("# model parameters: {:,d}".format(
@@ -53,6 +54,8 @@ print("# model parameters: {:,d}".format(
 # remove _fc layer
 if opt.net == 'resnet':
     model = nn.Sequential(*list(model.children())[:-1])
+elif opt.net == 'vgg':
+    model.classifier = nn.Sequential(*list(model.classifier.children())[:-1])
 model = model.to(device)
 
 ###################################################
@@ -78,21 +81,23 @@ print(str_verbose, "# extracting batches in total: " + str(len(dataloaders)))
 
 print(str_stage, "Start extracting features")
 data = tqdm(dataloaders, total=len(dataloaders), ncols=80)
+model.eval()
+save_dir = os.path.join(opt.logdir, opt.source, 'images')
+if not os.path.isdir(save_dir):
+    os.system('mkdir -p ' + save_dir)
 for anns_dict in data:
     inputs = anns_dict['anns_loaded'][0].to(device)
-    labels = anns_dict['anns_labels'][0].numpy()
+    labels = anns_dict['anns_labels'][0].to(device)
     with torch.no_grad():
-        if opt.net == 'resnet':
-            outputs = model(inputs).squeeze(-1).squeeze(-1)
-        else:
+        if opt.net == 'efficient':
             outputs = model.extract_features(inputs)
+        else:
+            outputs = model(inputs).squeeze(-1).squeeze(-1)
     # save features and corresponding labels
-    if not os.path.isdir(anns_dict['save_dir'][0]):
-        os.system('mkdir -p ' + anns_dict['save_dir'][0])
-    with open(anns_dict['feat_save_path'][0], 'w') as fp:
-        json.dump(list(outputs.detach().cpu().tolist()), fp)
+    with open(os.path.join(save_dir, anns_dict['feat_save_path'][0]), 'w') as fp:
+        json.dump(outputs.cpu().tolist(), fp)
     fp.close()
-    np.save(anns_dict['anns_save_path'][0], labels)
+    np.save(os.path.join(save_dir, anns_dict['anns_save_path'][0]), labels.cpu().numpy())
     del inputs, outputs, labels
     gc.collect()
 print(str_verbose, "{} feature extraction finished!".format(opt.source))
