@@ -26,7 +26,7 @@ def train_classifier(source, epoch, data_root):
     :param source: source to be evaluated
     :param epoch: number of epoch for training
     :param data_root: data root directory
-    :return:
+    :return: gt, pred, classes, classes_dict, clf, stat
     """
     print(str_stage, "Setting up")
 
@@ -39,33 +39,34 @@ def train_classifier(source, epoch, data_root):
     classes = _get_classes(source, train_list, ref_list, test_list, data_root)
     with open(os.path.join(data_root, source, 'labels.json'), 'r') as f:
         source_classes = json.load(f)
-    classes = [int(i) for i in list(set(classes).intersection(set(source_classes)))]
-    classes_dict = {classes[i]: int(i) for i in range(len(classes))}
+    classes = list(set(classes).intersection(set(source_classes)))
+    classes_dict = {classes[i]: i for i in range(len(classes))}
 
     # Train a classifier
     #
     start_time = time.time()
     ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes, classes_dict, data_root)
     if not ok:
-        return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0,
-                'gt': -1, 'pred': -1, 'cls': classes, 'cls_dict': classes_dict}
+        return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     runtime = time.time() - start_time
 
     # Evaluate trained classifier
     #
     gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root)
-    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc,
-            'gt': gt, 'pred': pred, 'cls': classes, 'cls_dict': classes_dict}
+    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc}
 
-    return stat, clf
+    return gt, pred, classes, classes_dict, clf, stat
 
 
 def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, data_root):
     """
-    :param data_root: data root directory
-    :param train_list: training features filename list
+    :param source: source to be evaluated
+    :param train_list: list of training features filename
+    :param ref_list: list of referring features filename
     :param epochs: number of epoch for training
     :param classes: classes to be used
+    :param classes_dict: classes dictionary to be used
+    :param data_root: data root directory
     :return: True, calibrated classifier and training accuracy
     """
 
@@ -101,10 +102,11 @@ def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_roo
     """
     :param source: source to be evaluated
     :param clf: trained classifier
-    :param test_list: testing features filename list
+    :param test_list: list of testing features filename
     :param classes: classes to be used
+    :param classes_dict: classes dictionary to be used
     :param data_root: data root directory
-    :return: evaluation accuracy
+    :return: gt, pred and evaluation accuracy
     """
 
     # Figure out # images per mini-batch and batches per epoch.
@@ -118,17 +120,30 @@ def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_roo
         x, y = _load_mini_batch(source, mini_batch, classes, classes_dict, data_root)
         est = clf.predict(x)
         gt.extend(y)
-        pred.extend(est.tolist())
+        pred.extend(est)
         valacc.append(_acc(y, est))
-    pred = [int(i) for i in pred]
+
     return gt, pred, valacc
 
 
 def _chunkify(lst, n):
+    """
+    :param lst: list to be chunkified
+    :param n: number of chunks
+    :return: list of chunks
+    """
     return [lst[i::n] for i in range(n)]
 
 
 def _load_data(source, xf, yf, classes, data_root):
+    """
+    :param source: source to be evaluated
+    :param xf: image_name.features.json
+    :param yf: image_name.features.anns.npy
+    :param classes: classes to be used
+    :param data_root: data root directory
+    :return: loaded features and labels
+    """
     with open(os.path.join(data_root, source, 'images', xf), 'r') as f:
         x = json.load(f)
     y = list(np.load(os.path.join(data_root, source, 'images', yf)))
@@ -145,8 +160,12 @@ def _load_data(source, xf, yf, classes, data_root):
 
 def _load_mini_batch(source, lst, classes, classes_dict, data_root):
     """
+    :param source: source to be evaluated
     :param lst: filename list to be loaded
-    :return: numpy array features and labels
+    :param classes: classes to be used
+    :param classes_dict: classes dictionary to be used
+    :param data_root: data root directory
+    :return: loaded features batch and labels batch
     """
     x_list, y_list = _split(lst)
     x, y = [], []
@@ -159,6 +178,14 @@ def _load_mini_batch(source, lst, classes, classes_dict, data_root):
 
 
 def _get_classes(source, train_list, ref_list, test_list, data_root):
+    """
+    :param source: source to be evaluated
+    :param train_list: list of training features filename
+    :param ref_list: list of referring features filename
+    :param test_list: list of testing features filename
+    :param data_root: data root directory
+    :return: common classes in train, ref and test
+    """
 
     def read(lst):
         lst_classes = []
@@ -213,6 +240,10 @@ def _get_lists(source, data_root):
 
 
 def _split(lst):
+    """
+    :param lst: list to be split
+    :return: list of feature filenames and label filenames
+    """
     x = [l.split(', ')[0] for l in lst]
     y = [l.split(', ')[1] for l in lst]
     return x, y
@@ -234,10 +265,9 @@ def _acc(gts, preds):
 
 # gt, pred, cls, status = train_classifier(args.source, args.epochs)
 try:
-    status, clf = train_classifier(args.source, args.epochs, args.data_root)
+    gt, pred, cls, cls_dict, clf, status = train_classifier(args.source, args.epochs, args.data_root)
 except Exception as e:
-    status, clf = {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0,
-                   'gt': -1, 'pred': -1, 'cls': -1, 'cls_dict': -1}, None
+    gt, pred, cls, cls_dict, clf, status = 0, 0, 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     print("Failed to train source: {}, {}".format(args.source, e))
     exit(1)
 
@@ -245,10 +275,12 @@ except Exception as e:
 save_dir = os.path.join(args.outdir, args.source)
 if not os.path.isdir(save_dir):
     os.system('mkdir -p ' + save_dir)
-# Save status to pickle file
-with open(os.path.join(save_dir, 'status.pkl'), 'wb') as f:
-    pickle.dump(status, f)
+# Save status to json file
+with open(os.path.join(save_dir, 'status.json'), 'w') as f:
+    json.dump(status, f)
 f.close()
+# Save ground truth label and predicted labels to numpy file	# Save trained classifier
+np.savez(os.path.join(save_dir, 'output.npz'), gt=gt, pred=pred, cls=cls, cls_dict=cls_dict)
 # Save trained classifier
 with open(os.path.join(save_dir, 'classifier.pkl'), 'wb') as f:
     pickle.dump(clf, f)
