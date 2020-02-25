@@ -5,15 +5,15 @@ import time
 import random
 import argparse
 import numpy as np
-import boto3
-from io import BytesIO
+import pickle
 from sklearn.linear_model import SGDClassifier
 from sklearn.calibration import CalibratedClassifierCV
 from util.util_print import str_stage
 
 
-parser = argparse.ArgumentParser(description='Train Logistic Regression Classifier')
+parser = argparse.ArgumentParser(description='Train Logistic Regression classifier')
 parser.add_argument('source', type=str, help='Source to be evaluated')
+parser.add_argument('--data_root', type=str, help='Path to the data root')
 parser.add_argument('--epochs', type=int, help='Number of epoch for training')
 parser.add_argument('--outdir', type=str, help='Output directory')
 
@@ -21,17 +21,14 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
 
 
-def train_classifier(source, epoch):
+def train_classifier(source, epoch, data_root):
     """
     :param source: source to be evaluated
     :param epoch: number of epoch for training
+    :param data_root: data root directory
     :return:
     """
     print(str_stage, "Setting up")
-
-    # Data root directory
-    #
-    data_root = '/media/qimin/seagate5tb/features'
 
     # Read features list and is_train list
     #
@@ -42,25 +39,28 @@ def train_classifier(source, epoch):
     classes = _get_classes(source, train_list, ref_list, test_list, data_root)
     with open(os.path.join(data_root, source, 'labels.json'), 'r') as f:
         source_classes = json.load(f)
-    classes = list(set(classes).intersection(set(source_classes)))
+    classes = [int(i) for i in list(set(classes).intersection(set(source_classes)))]
+    classes_dict = {classes[i]: int(i) for i in range(len(classes))}
 
     # Train a classifier
     #
     start_time = time.time()
-    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes, data_root)
+    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes, classes_dict, data_root)
     if not ok:
-        return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
+        return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0,
+                'gt': -1, 'pred': -1, 'cls': classes, 'cls_dict': classes_dict}
     runtime = time.time() - start_time
 
     # Evaluate trained classifier
     #
-    gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, data_root)
-    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc}
+    gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root)
+    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc,
+            'gt': gt, 'pred': pred, 'cls': classes, 'cls_dict': classes_dict}
 
-    return gt, pred, classes, stat
+    return stat, clf
 
 
-def _do_training(source, train_list, ref_list, epochs, classes, data_root):
+def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, data_root):
     """
     :param data_root: data root directory
     :param train_list: training features filename list
@@ -72,13 +72,12 @@ def _do_training(source, train_list, ref_list, epochs, classes, data_root):
     # Figure out # images per mini-batch and batches per epoch.
     batch_size = min(len(train_list), 200)
     n = int(np.ceil(len(train_list) / float(batch_size)))
-    class_dict = {classes[i]: i for i in range(len(classes))}
     unique_class = list(range(len(classes)))
-    print(str_stage, "Start training {}: number of images: {}, number of batch: {}, classes: {}".format(
-        source, len(train_list), n, len(classes)))
+    print(str_stage, "Start training {} with {} epochs: number of images: {}, number of batch: {}, classes: {}".format(
+        source, epochs, len(train_list), n, len(classes)))
 
     # Load reference data (must hold in memory for the calibration).
-    x_ref, y_ref = _load_mini_batch(source, ref_list, classes, class_dict, data_root)
+    x_ref, y_ref = _load_mini_batch(source, ref_list, classes, classes_dict, data_root)
 
     # Initialize classifier and refset accuracy list
     clf = SGDClassifier(loss='log', average=True)
@@ -87,7 +86,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, data_root):
         random.shuffle(train_list)
         mini_batches = _chunkify(train_list, n)
         for mb in mini_batches:
-            x, y = _load_mini_batch(source, mb, classes, class_dict, data_root)
+            x, y = _load_mini_batch(source, mb, classes, classes_dict, data_root)
             clf.partial_fit(x, y, classes=unique_class)
         refacc.append(_acc(y_ref, clf.predict(x_ref)))
 
@@ -98,7 +97,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, data_root):
     return True, clf, refacc
 
 
-def _evaluate_classifier(source, clf, test_list, classes, data_root):
+def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root):
     """
     :param source: source to be evaluated
     :param clf: trained classifier
@@ -112,17 +111,16 @@ def _evaluate_classifier(source, clf, test_list, classes, data_root):
     batch_size = min(len(test_list), 100)
     n = int(np.ceil(len(test_list) / float(batch_size)))
     print(str_stage, "Testing: batch size: {}, number of batch: {}".format(batch_size, n))
-    class_dict = {classes[i]: i for i in range(len(classes))}
 
     gt, pred, valacc = [], [], []
     for i in range(n):
         mini_batch = test_list[i*batch_size:(i+1)*batch_size]
-        x, y = _load_mini_batch(source, mini_batch, classes, class_dict, data_root)
+        x, y = _load_mini_batch(source, mini_batch, classes, classes_dict, data_root)
         est = clf.predict(x)
         gt.extend(y)
-        pred.extend(est)
+        pred.extend(est.tolist())
         valacc.append(_acc(y, est))
-
+    pred = [int(i) for i in pred]
     return gt, pred, valacc
 
 
@@ -145,7 +143,7 @@ def _load_data(source, xf, yf, classes, data_root):
     return list(x), list(y)
 
 
-def _load_mini_batch(source, lst, classes, class_dict, data_root):
+def _load_mini_batch(source, lst, classes, classes_dict, data_root):
     """
     :param lst: filename list to be loaded
     :return: numpy array features and labels
@@ -156,7 +154,7 @@ def _load_mini_batch(source, lst, classes, class_dict, data_root):
         thisx, thisy = _load_data(source, x_list[i], y_list[i], classes, data_root)
         x.extend(thisx)
         y.extend(thisy)
-    y = [class_dict[i] for i in y]
+    y = [classes_dict[i] for i in y]
     return x, y
 
 
@@ -234,20 +232,24 @@ def _acc(gts, preds):
     return float(np.sum(np.array(gts) == np.array(preds).astype(int)) / len(gts))
 
 
+# gt, pred, cls, status = train_classifier(args.source, args.epochs)
 try:
-    gt, pred, cls, status = train_classifier(args.source, args.epochs)
+    status, clf = train_classifier(args.source, args.epochs, args.data_root)
 except Exception as e:
-    gt, pred, cls, status = 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
+    status, clf = {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0,
+                   'gt': -1, 'pred': -1, 'cls': -1, 'cls_dict': -1}, None
     print("Failed to train source: {}, {}".format(args.source, e))
     exit(1)
 
-save_dir = args.outdir + args.source
+# Create save dir if not exist
+save_dir = os.path.join(args.outdir, args.source)
 if not os.path.isdir(save_dir):
     os.system('mkdir -p ' + save_dir)
-# Save status to json file
-with open(os.path.join(save_dir, 'status.json'), 'w') as f:
-    json.dump(status, f)
+# Save status to pickle file
+with open(os.path.join(save_dir, 'status.pkl'), 'wb') as f:
+    pickle.dump(status, f)
 f.close()
-# Save ground truth label and predicted labels to numpy file
-np.savez(os.path.join(save_dir, 'output.npz'), gt=gt, pred=pred, cls=cls)
+# Save trained classifier
+with open(os.path.join(save_dir, 'classifier.pkl'), 'wb') as f:
+    pickle.dump(clf, f)
 print('{} training completed!'.format(args.source))
