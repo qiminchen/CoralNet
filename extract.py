@@ -89,15 +89,20 @@ for anns_dict in data:
     inputs = anns_dict['anns_loaded'][0].to(device)
     labels = anns_dict['anns_labels'][0].to(device)
     with torch.no_grad():
-        if opt.net == 'efficient':
+        if opt.net == 'efficientnet':
             outputs = model.extract_features(inputs)
         else:
             outputs = model(inputs).squeeze(-1).squeeze(-1)
-    # save features and corresponding labels
+    # save features, corresponding labels and annotation location info
+    outputs = outputs.detach().cpu().tolist()
+    labels = labels.detach().cpu().numpy()
     with open(os.path.join(save_dir, anns_dict['feat_save_path'][0]), 'w') as fp:
-        json.dump(outputs.cpu().tolist(), fp)
+        json.dump(outputs, fp)
     fp.close()
-    np.save(os.path.join(save_dir, anns_dict['anns_save_path'][0]), labels.cpu().numpy())
+    np.save(os.path.join(save_dir, anns_dict['anns_save_path'][0]), labels)
+    with open(os.path.join(save_dir, anns_dict['anno_loc_path'][0]), 'w') as fp:
+        json.dump(anns_dict['anno_loc'], fp)
+    fp.close()
     del inputs, outputs, labels
     gc.collect()
 print(str_verbose, "{} feature extraction finished!".format(opt.source))
@@ -108,8 +113,8 @@ print(str_stage, "Start creating features_all.txt and is_train.txt")
 status_dir = os.path.join(opt.logdir, opt.source)
 # create features_all.txt
 features_list = list(sorted(os.listdir(os.path.join(status_dir, 'images'))))
-fl = [f for f in features_list if f.endswith('.json')]
-fal = [f for f in features_list if f.endswith('.npy')]
+fl = [f for f in features_list if f.endswith('.features.json')]
+fal = [f for f in features_list if f.endswith('.anns.npy')]
 assert len(fl) == len(fal)
 flfal = [fl[i]+', '+fal[i] for i in range(len(fl))]
 with open(os.path.join(status_dir, 'features_all.txt'), 'w') as f:
