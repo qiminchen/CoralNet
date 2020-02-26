@@ -1,10 +1,12 @@
 import os
 import json
+import pickle
 import numpy as np
 import seaborn as sn
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+from PIL import Image, ImageDraw
 
 
 class bcolors:
@@ -51,13 +53,14 @@ def plot_cm(filename):
     :param filename: filename of npz files containing the gt and pred
     :return: confusion matrix
     """
+
     s = np.load(filename)
     source = filename.split('/')[-2]
     cm = confusion_matrix(s['gt'], s['pred'])
     acc = np.round(np.sum(s['gt'] == s['pred']) * 100 / len(s['gt']), decimals=2)
     each_total = np.sum(cm, axis=1)
     idx = np.argsort(-each_total)
-    cm = np.round((cm*100/each_total[:,None]), decimals=1)
+    cm = np.round((cm*100/each_total[:, None]), decimals=1)
     cls = get_class_name(s['cls'])
     cls_nbr = [c + ' [n={}]'.format(str(each_total[i])) for i, c in enumerate(cls)]
     cls_nbr = [cls_nbr[i] for i in idx]
@@ -80,3 +83,57 @@ def plot_cm(filename):
         source, acc, len(s['gt'])))
     plt.tight_layout()
     plt.savefig(os.path.join('/home/qimin/Downloads', source + '.png'))
+
+
+def images_marking(net, source, image_name):
+    """
+    :param net: network the classifier is trained on, ex. trained_resnet50
+    :param source: source that image belongs to, ex. s294
+    :param image_name: image name
+    :return: marked image
+    """
+    image_root = '/mnt/sda/coral'
+    feat_root = '/home/qimin/Downloads/evaluation/features'
+    cls_root = '/home/qimin/Downloads/evaluation/classifier'
+
+    #
+    # Open image
+    image = Image.open(os.path.join(image_root, source, 'images', image_name + '.jpg')).convert('RGB')
+    #
+    # Annotation location
+    with open(os.path.join(feat_root, net, source, 'images', image_name + '.anno.loc.json'), 'r') as f:
+        anno_loc = json.load(f)
+    #
+    # Load trained classifier
+    with open(os.path.join(cls_root, net, source, 'classifier.pkl'), 'rb') as f:
+        clf = pickle.load(f)
+    #
+    # Load classes and labels
+    clf_output = np.load(os.path.join(cls_root, net, source, 'output.npz'), allow_pickle=True)
+    classes = clf_output['cls']
+    classes_dict = clf_output['cls_dict'].item()
+    labels_dict = {v: al['name'] for al in all_labels for k, v in classes_dict.items() if al['id'] == k}
+    #
+    # Load features and corresponding classes
+    with open(os.path.join(feat_root, net, source, 'images', image_name + '.features.json'), 'r') as f:
+        x = np.array(json.load(f))
+    y = np.load(os.path.join(feat_root, net, source, 'images', image_name + '.features.anns.npy'))
+    # Remove annotations that their classes is not in target classes
+    invalid_classes = list(set(y).difference(classes))
+    invalid_idx = [i for i, v in enumerate(y) if v in invalid_classes]
+    x = np.delete(x, invalid_idx, axis=0)
+    y = np.delete(y, invalid_idx, axis=0)
+    anno_loc = np.delete(np.array(anno_loc), invalid_idx, axis=0)
+    y = [classes_dict[i] for i in y]
+    est = clf.predict(x)
+
+    # Mark gt and pred on each annotation in image
+    d = ImageDraw.Draw(image)
+    fills = {'True': (255, 255, 0), 'False': (255, 255, 255)}
+    for i, loc in enumerate(anno_loc):
+        row = int(loc['row'][0])
+        col = int(loc['col'][0].split('.')[0])
+        d.text((col, row), "X: (gt: {}, est: {})".format(labels_dict[y[i]], labels_dict[est[i]]),
+               fill=fills[str(est[i] == y[i])])
+
+    image.save(os.path.join('/home/qimin/Downloads', source + '_' + image_name + '.png'))
