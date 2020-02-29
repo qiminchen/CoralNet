@@ -8,7 +8,7 @@ import numpy as np
 import pickle
 from sklearn.linear_model import SGDClassifier
 from sklearn.calibration import CalibratedClassifierCV
-from util.util_print import str_stage
+from util.util_print import str_stage, plot_cm, plot_refacc, images_marking
 
 
 parser = argparse.ArgumentParser(description='Train Logistic Regression classifier')
@@ -23,6 +23,7 @@ args = parser.parse_args(argv)
 
 def train_classifier(source, epoch, data_root):
     """
+    Main function to train and evaluate the classifier
     :param source: source to be evaluated
     :param epoch: number of epoch for training
     :param data_root: data root directory
@@ -37,9 +38,6 @@ def train_classifier(source, epoch, data_root):
     # Identify classes common to both train and test. This will be our labelset for the training.
     #
     classes = _get_classes(source, train_list, ref_list, test_list, data_root)
-    with open(os.path.join(data_root, source, 'labels.json'), 'r') as f:
-        source_classes = json.load(f)
-    classes = list(set(classes).intersection(set(source_classes)))
     classes_dict = {classes[i]: i for i in range(len(classes))}
 
     # Train a classifier
@@ -60,6 +58,7 @@ def train_classifier(source, epoch, data_root):
 
 def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, data_root):
     """
+    Function to train and calibrate the classifier
     :param source: source to be evaluated
     :param train_list: list of training features filename
     :param ref_list: list of referring features filename
@@ -71,7 +70,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, da
     """
 
     # Figure out # images per mini-batch and batches per epoch.
-    batch_size = min(len(train_list), 200)
+    batch_size = min(len(train_list), 500)
     n = int(np.ceil(len(train_list) / float(batch_size)))
     unique_class = list(range(len(classes)))
     print(str_stage, "Start training {} with {} epochs: number of images: {}, number of batch: {}, classes: {}".format(
@@ -100,6 +99,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, da
 
 def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root):
     """
+    Function to evaluate the trained classifier
     :param source: source to be evaluated
     :param clf: trained classifier
     :param test_list: list of testing features filename
@@ -110,7 +110,7 @@ def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_roo
     """
 
     # Figure out # images per mini-batch and batches per epoch.
-    batch_size = min(len(test_list), 100)
+    batch_size = min(len(test_list), 300)
     n = int(np.ceil(len(test_list) / float(batch_size)))
     print(str_stage, "Testing: batch size: {}, number of batch: {}".format(batch_size, n))
 
@@ -128,25 +128,30 @@ def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_roo
 
 def _chunkify(lst, n):
     """
+    Function to chunkify the list for mini-batch training and testing
     :param lst: list to be chunkified
     :param n: number of chunks
     :return: list of chunks
     """
+
     return [lst[i::n] for i in range(n)]
 
 
-def _load_data(source, xf, yf, classes, data_root):
+def _load_data(source, img, classes, data_root):
     """
+    Function to load the features and labels of a single image
     :param source: source to be evaluated
-    :param xf: image_name.features.json
-    :param yf: image_name.features.anns.npy
+    # :param xf: image_name.features.json
+    # :param yf: image_name.features.anns.npy
+    :param img: image name
     :param classes: classes to be used
     :param data_root: data root directory
     :return: loaded features and labels
     """
-    with open(os.path.join(data_root, source, 'images', xf), 'r') as f:
+
+    with open(os.path.join(data_root, source, 'images', img + '.features.json'), 'r') as f:
         x = json.load(f)
-    y = list(np.load(os.path.join(data_root, source, 'images', yf)))
+    y = list(np.load(os.path.join(data_root, source, 'images', img + '.features.anns.npy')))
 
     # Remove samples for which the label is not in classes
     # Check if list of tuple is empty of not
@@ -160,6 +165,7 @@ def _load_data(source, xf, yf, classes, data_root):
 
 def _load_mini_batch(source, lst, classes, classes_dict, data_root):
     """
+    Function to load a batch of features and labels
     :param source: source to be evaluated
     :param lst: filename list to be loaded
     :param classes: classes to be used
@@ -167,10 +173,10 @@ def _load_mini_batch(source, lst, classes, classes_dict, data_root):
     :param data_root: data root directory
     :return: loaded features batch and labels batch
     """
-    x_list, y_list = _split(lst)
+
     x, y = [], []
-    for i in range(len(x_list)):
-        thisx, thisy = _load_data(source, x_list[i], y_list[i], classes, data_root)
+    for i in range(len(lst)):
+        thisx, thisy = _load_data(source, lst[i], classes, data_root)
         x.extend(thisx)
         y.extend(thisy)
     y = [classes_dict[i] for i in y]
@@ -179,6 +185,7 @@ def _load_mini_batch(source, lst, classes, classes_dict, data_root):
 
 def _get_classes(source, train_list, ref_list, test_list, data_root):
     """
+    Function to get the common classes of train/ref/test set
     :param source: source to be evaluated
     :param train_list: list of training features filename
     :param ref_list: list of referring features filename
@@ -190,17 +197,14 @@ def _get_classes(source, train_list, ref_list, test_list, data_root):
     def read(lst):
         lst_classes = []
         for l in lst:
-            npy = os.path.join(data_root, source, 'images', l)
+            npy = os.path.join(data_root, source, 'images', l + '.features.anns.npy')
             arr = list(np.load(npy))
             lst_classes += arr
         return lst_classes
 
-    _, y_train_list = _split(train_list)
-    _, y_ref_list = _split(ref_list)
-    _, y_test_list = _split(test_list)
-    y_train_classes = read(y_train_list)
-    y_ref_classes = read(y_ref_list)
-    y_test_classes = read(y_test_list)
+    y_train_classes = read(train_list)
+    y_ref_classes = read(ref_list)
+    y_test_classes = read(test_list)
     classes = list(set(y_test_classes).intersection(
         set(y_train_classes), set(y_ref_classes)))
     return classes
@@ -208,25 +212,27 @@ def _get_classes(source, train_list, ref_list, test_list, data_root):
 
 def _get_lists(source, data_root):
     """
+    Function to generate the train/ref/test list
     :param source: source to be evaluated
     :param data_root: data root directory
     :return: training set and testing set filename lists
     """
-    with open(os.path.join(data_root, source, 'features_all.txt'), 'r') as file:
+
+    with open(os.path.join(data_root, source, 'images_all.txt'), 'r') as file:
         line = file.read()
     file.close()
-    features_list = line.split('\n')
+    images_list = line.split('\n')
 
     with open(os.path.join(data_root, source, 'is_train.txt'), 'r') as file:
         line = file.read()
     file.close()
     is_train = [x == 'True' for x in line.split('\n')]
 
-    assert len(features_list) == len(is_train)
+    assert len(images_list) == len(is_train)
 
     # Training set and testing set split and shuffle
-    train_list = [features_list[i] for i in range(len(features_list)) if is_train[i] is True]
-    test_list = [features_list[i] for i in range(len(features_list)) if is_train[i] is False]
+    train_list = [images_list[i] for i in range(len(images_list)) if is_train[i] is True]
+    test_list = [images_list[i] for i in range(len(images_list)) if is_train[i] is False]
     random.shuffle(train_list)
     random.shuffle(test_list)
 
@@ -239,22 +245,14 @@ def _get_lists(source, data_root):
     return train_list, ref_list, test_list
 
 
-def _split(lst):
-    """
-    :param lst: list to be split
-    :return: list of feature filenames and label filenames
-    """
-    x = [l.split(', ')[0] for l in lst]
-    y = [l.split(', ')[1] for l in lst]
-    return x, y
-
-
 def _acc(gts, preds):
     """
+    Function to compute the accuracy
     :param gts: ground truth label
     :param preds: prediction label
     :return: accuracy
     """
+
     if len(gts) == 0 or len(preds) == 0:
         raise TypeError('Inputs can not be empty')
     if not len(gts) == len(preds):
@@ -285,3 +283,7 @@ np.savez(os.path.join(save_dir, 'output.npz'), gt=gt, pred=pred, cls=cls, cls_di
 with open(os.path.join(save_dir, 'classifier.pkl'), 'wb') as f:
     pickle.dump(clf, f)
 print('{} training completed!'.format(args.source))
+# Plot training loss
+plot_refacc(save_dir)
+# Plot confusion matrix
+plot_cm(filename=os.path.join(save_dir, 'output.npz'), save_path=save_dir)
