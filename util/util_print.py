@@ -30,12 +30,16 @@ with open('/home/qimin/Projects/CoralNet/data_analysis/label_set.json', 'r') as 
     all_labels = json.load(f)
 
 
-def plot_refacc(filename):
-    with open(filename, 'r') as f:
+def plot_refacc(filepath):
+    with open(os.path.join(filepath, 'status.json'), 'r') as f:
         status = json.load(f)
     refacc = status['refacc']
     plt.figure(figsize=(4, 4))
     plt.plot(list(range(len(refacc))), refacc)
+    plt.title(filepath.split('/')[-1])
+    plt.grid(True, ls='--', lw=0.8)
+    plt.tight_layout()
+    plt.savefig(os.path.join(filepath, 'loss.png'))
 
 
 def get_class_name(classes):
@@ -48,9 +52,10 @@ def get_class_name(classes):
     return cls
 
 
-def plot_cm(filename):
+def plot_cm(filename, save_path='/home/qimin/Downloads'):
     """
     :param filename: filename of npz files containing the gt and pred
+    :param save_path: path for saving confusion matrix
     :return: confusion matrix
     """
 
@@ -82,7 +87,7 @@ def plot_cm(filename):
     plt.title('{}: % of the label that is classified as other labels (acc: {}, n:{}) \n'.format(
         source, acc, len(s['gt'])))
     plt.tight_layout()
-    plt.savefig(os.path.join('/home/qimin/Downloads', source + '.png'))
+    plt.savefig(os.path.join(save_path, source + '.png'))
 
 
 def images_marking(net, source, image_name):
@@ -126,14 +131,16 @@ def images_marking(net, source, image_name):
     anno_loc = np.delete(np.array(anno_loc), invalid_idx, axis=0)
     y = [classes_dict[i] for i in y]
     est = clf.predict(x)
+    acc = np.round(np.sum(y == est) * 100 / len(y))
 
     # Mark gt and pred on each annotation in image
     d = ImageDraw.Draw(image)
     fills = {'True': (255, 255, 0), 'False': (255, 255, 255)}
+    d.text((0, 0), "Accuracy: {}".format(acc), fill=fills['False'])
     for i, loc in enumerate(anno_loc):
         row = int(loc['row'][0])
         col = int(loc['col'][0].split('.')[0])
         d.text((col, row), "X: (gt: {}, est: {})".format(labels_dict[y[i]], labels_dict[est[i]]),
                fill=fills[str(est[i] == y[i])])
 
-    image.save(os.path.join('/home/qimin/Downloads', source + '_' + image_name + '.png'))
+    image.save(os.path.join(cls_root, net, source, image_name + '.png'))
