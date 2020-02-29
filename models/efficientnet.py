@@ -175,6 +175,7 @@ class EfficientNet(nn.Module):
 
         # Head
         x = relu_fn(self._bn1(self._conv_head(x)))
+        x = nn.functional.adaptive_avg_pool2d(x, 1).squeeze(-1).squeeze(-1)
 
         return x
 
