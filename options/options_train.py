@@ -35,6 +35,8 @@ def add_general_arguments(parser):
     parser.add_argument('--eval_batches', default=None,
                         type=int, help='max number of batches used for evaluation per epoch')
     parser.add_argument('--log_time', action='store_true', help='adding time log')
+    parser.add_argument('--input_size', type=int, default=224,
+                        help='image size, 224x224 or 168x168')
 
     # Network name
     parser.add_argument('--net', type=str, required=True, default='efficientnet',

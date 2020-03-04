@@ -19,7 +19,6 @@ class Dataset(data.Dataset):
     transform = transforms.Compose([
         transforms.ToTensor(),
     ])
-    img_size = 224
 
     @classmethod
     def read_bool_status(cls, status_file):
@@ -35,11 +34,11 @@ class Dataset(data.Dataset):
         s3 = boto3.resource('s3', endpoint_url="https://s3.nautilus.optiputer.net")
         bucket = s3.Bucket('qic003')
 
-        img_bucket = bucket.Object('status/images_for_training.txt')
+        img_bucket = bucket.Object('status/v2/images_for_training.txt')
         images_list = img_bucket.get()['Body'].read().decode('utf-8')
         images_list = images_list.split('\n')
 
-        is_train_bucket = bucket.Object('status/is_train.txt')
+        is_train_bucket = bucket.Object('status/v2/is_train.txt')
         is_train = is_train_bucket.get()['Body'].read().decode('utf-8')
         is_train = [x == 'True' for x in is_train.split('\n')]
 
@@ -53,7 +52,7 @@ class Dataset(data.Dataset):
             label = labels_map[img.split('/')[1]]
             item_in_split = ((self.mode == 'train') == is_train[i])
             if item_in_split:
-                samples.append((join('coral_crop', img), label))
+                samples.append((join('cropped_data/coral_crop_' + str(opt.input_size), img), label))
         self.samples = samples
         self.bucket = bucket
 
