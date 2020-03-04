@@ -38,6 +38,9 @@ def train_classifier(source, epoch, data_root):
     # Identify classes common to both train and test. This will be our labelset for the training.
     #
     classes = _get_classes(source, train_list, ref_list, test_list, data_root)
+    with open(os.path.join('/mnt/sda/coral_v2/backend_status', source, 'labels.json'), 'r') as f:
+        backend_classes = json.load(f)
+    classes = list(set(backend_classes).intersection(classes))
     classes_dict = {classes[i]: i for i in range(len(classes))}
 
     # Train a classifier
@@ -275,7 +278,7 @@ if not os.path.isdir(save_dir):
     os.system('mkdir -p ' + save_dir)
 # Save status to json file
 with open(os.path.join(save_dir, 'status.json'), 'w') as f:
-    json.dump(status, f)
+    json.dump(status, f, indent=2)
 f.close()
 # Save ground truth label and predicted labels to numpy file	# Save trained classifier
 np.savez(os.path.join(save_dir, 'output.npz'), gt=gt, pred=pred, cls=cls, cls_dict=cls_dict)
