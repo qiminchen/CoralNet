@@ -29,7 +29,7 @@ def train_classifier(source, epoch, data_root):
     :param data_root: data root directory
     :return: gt, pred, classes, classes_dict, clf, stat
     """
-    print(str_stage, "Setting up")
+    print(str_stage, "Setting up for {}".format(data_root.split('/')[-1]))
 
     # Read features list and is_train list
     #
@@ -115,7 +115,7 @@ def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_roo
     # Figure out # images per mini-batch and batches per epoch.
     batch_size = min(len(test_list), 300)
     n = int(np.ceil(len(test_list) / float(batch_size)))
-    print(str_stage, "Testing: batch size: {}, number of batch: {}".format(batch_size, n))
+    print(str_stage, "Testing {}: batch size: {}, number of batch: {}".format(source, batch_size, n))
 
     gt, pred, valacc = [], [], []
     for i in range(n):
@@ -221,12 +221,12 @@ def _get_lists(source, data_root):
     :return: training set and testing set filename lists
     """
 
-    with open(os.path.join(data_root, source, 'images_all.txt'), 'r') as file:
+    with open(os.path.join('/mnt/sda/coral_v2/backend_status', source, 'images_all.txt'), 'r') as file:
         line = file.read()
     file.close()
     images_list = line.split('\n')
 
-    with open(os.path.join(data_root, source, 'is_train.txt'), 'r') as file:
+    with open(os.path.join('/mnt/sda/coral_v2/backend_status', source, 'is_train.txt'), 'r') as file:
         line = file.read()
     file.close()
     is_train = [x == 'True' for x in line.split('\n')]

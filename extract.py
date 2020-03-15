@@ -35,7 +35,7 @@ else:
 
 ###################################################
 
-print(str_stage, "Setting up models")
+print(str_stage, "Setting up models: {}, image size: {}".format(opt.logdir.split('/')[-1], opt.input_size))
 model = models.get_model(opt)
 state_dicts = torch.load(opt.net_path, map_location=device)
 # original saved file with DataParallel
@@ -106,29 +106,3 @@ for i, anns_dict in enumerate(data):
     del inputs, outputs, labels
     gc.collect()
 print(str_verbose, "{} feature extraction finished!".format(opt.source))
-# exit()
-###################################################
-
-# print(str_stage, "Start creating features_all.txt and is_train.txt")
-# status_dir = os.path.join(opt.logdir, opt.source)
-# # create features_all.txt
-# features_list = list(sorted(os.listdir(os.path.join(status_dir, 'images'))))
-# fl = [f for f in features_list if f.endswith('.features.json')]
-# fal = [f for f in features_list if f.endswith('.anns.npy')]
-# assert len(fl) == len(fal)
-# flfal = [fl[i]+', '+fal[i] for i in range(len(fl))]
-# with open(os.path.join(status_dir, 'features_all.txt'), 'w') as f:
-#     f.write('\n'.join(flfal))
-# f.close()
-# # create is_train.txt
-# nbr = len(flfal)
-# is_train = np.array([1]*nbr)
-# radn = np.random.choice(nbr, int(nbr*0.125), replace=False)
-# is_train[radn] = 0
-# is_train = list(is_train)
-# is_train = [str(i == 1) for i in is_train]
-# assert len(is_train) == nbr
-# with open(os.path.join(status_dir, 'is_train.txt'), 'w') as f:
-#     f.write('\n'.join(is_train))
-# f.close()
-# print(str_verbose, "features_all.txt and is_train.txt created")
