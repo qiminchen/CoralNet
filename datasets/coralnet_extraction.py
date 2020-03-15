@@ -10,8 +10,6 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class Dataset(data.Dataset):
 
-    data_root = '/home/qimin/Downloads/evaluation/images'
-
     transform = transforms.Compose([
         transforms.ToTensor(),
     ])
@@ -20,12 +18,14 @@ class Dataset(data.Dataset):
         source = opt.source
         self.local = local
 
-        images_list = os.listdir(os.path.join(self.data_root, source))
+        data_root = os.path.join('/home/qimin/Downloads/evaluation/images', str(opt.input_size))
+
+        images_list = os.listdir(os.path.join(data_root, source))
 
         # Pack paths into a dict
         annotations = []
         for i, im in enumerate(images_list):
-            im_root = os.path.join(self.data_root, source, im)
+            im_root = os.path.join(data_root, source, im)
             anno_list = os.listdir(im_root)
             if len(anno_list) > 0:
                 anns = [os.path.join(im_root, al) for al in anno_list]
