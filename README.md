@@ -66,14 +66,16 @@ aws s3 sync s3://qic003/CoralNet ./qic003
 
 ## GPU / CPU Utilization
 
-For 1 8GB RAM CPU and 1 1080ti GPU, the maximum batch size that fills up GPU memory and and the minimum number of workers of dataloader that ensure >90% GPU utilization.
+For 1 8GB RAM CPU and 1 1080ti GPU, the maximum batch size with input size of 224x224 that fills up GPU memory and and the minimum number of workers of dataloader that ensure >90% GPU utilization.
 
-| Network |    CPU   |      GPU     | Maxi BS | Mini Worker |
-| :-----: | :------: | :----------: |  :----: | :--------:  |
-|  VGG16  |  1 - 8G  |  1 - 1080ti  |    96   |     18      |
-|  ResNet50  |  1 - 8G  |  1 - 1080ti  |       |           |
-|  ResNet101  |  1 - 8G  |  1 - 1080ti  |       |           |
-|  EfficientNet - b0  |  1 - 8G  |  1 - 1080ti  |       |           |
+| Network |    CPU   |      GPU     | Batch size | Workers |  Training time |
+| :-----: | :------: | :----------: |  :----: | :--------:  | :----: |
+|  VGG16  |  1 - 8G  |  2 - 1080ti  |    96   |     18      |  --   |
+|  ResNet50  |  3 - 64G  |  2 - 1080ti  |   196    |   108    |  ~ 19 hrs/epoch   |
+|  ResNet101  |  3 - 64G  |  2 - 1080ti  |   156    |  108     |  ~ 24 hrs/epoch  |
+|  EfficientNetb0 - 1280  |  3 - 64G  |  2 - 1080ti  |   156    |   128    |  ~ 18 hrs/epoch |
+|  EfficientNetb0 - 2048  |  3 - 64G  |  2 - 1080ti  |   156    |   128    |  ~ 24 hrs/epoch |
+|  EfficientNetb0 - 4096  |  3 - 64G  |  2 - 1080ti  |   156    |   128    |  ~ 26 hrs/epoch |
 
 # CoralNet
 
