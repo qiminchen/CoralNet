@@ -1,11 +1,13 @@
-# File for testing model: test network forward pass cpu run time
+# Testing model: inference time using CPU and GPU
 
+import os
 import time
 import torch
 import models
 import datasets
 import numpy as np
 from tqdm import tqdm
+from collections import OrderedDict
 import torch.nn as nn
 from options import options_test
 from util.util_print import str_stage, str_verbose
@@ -21,61 +23,77 @@ print(opt)
 ###################################################
 
 print(str_stage, "Setting device")
-device = torch.device('cpu')
-print("Device: ", device)
+if opt.gpu == '-1':
+    device = torch.device('cpu')
+    print("# Using CPU")
+else:
+    os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
+    device = torch.device('cuda')
+    print(device)
 
 ###################################################
 
-print(str_stage, "Setting up models")
+print(str_stage, "Setting up models with image size: {}".format(opt.input_size))
 model = models.get_model(opt)
-state_dicts = torch.load(opt.net_path, map_location=device)
-model.load_state_dict(state_dicts['net'])
+# state_dicts = torch.load(opt.net_path, map_location=device)
+# # original saved file with DataParallel
+# # create new OrderedDict that does not contain `module`.
+# # ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+# new_state_dicts = OrderedDict()
+# for k, v in state_dicts['net'].items():
+#     name = k[7:]
+#     # name = k.replace(".module", "")
+#     new_state_dicts[name] = v
+# model.load_state_dict(new_state_dicts)
 for param in model.parameters():
     param.requires_grad = False
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
+# remove _fc layer
+if opt.net == 'resnet':
+    model = nn.Sequential(*list(model.children())[:-1])
+elif opt.net == 'vgg':
+    model.classifier = nn.Sequential(*list(model.classifier.children())[:-1])
+model = model.to(device)
 
 ###################################################
 
-print(str_stage, "Setting up data loaders")
+print(str_stage, "Setting up data loaders for source: {}".format(opt.source))
 start_time = time.time()
 Dataset = datasets.get_dataset(opt.dataset)
-dataset = Dataset(opt, mode='valid')
+dataset = Dataset(opt, local=True)
 dataloaders = torch.utils.data.DataLoader(
         dataset,
         batch_size=opt.batch_size,
+        shuffle=False,
         num_workers=opt.workers,
         pin_memory=True,
-        drop_last=True,
-        shuffle=False
-)
+        drop_last=False
+    )
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
       (time.time() - start_time))
-print(str_verbose, "# test batches: " + str(len(dataloaders)))
+print(str_verbose, "# extracting points: " + str(len(dataset)))
+print(str_verbose, "# extracting batches in total: " + str(len(dataloaders)))
 
 ###################################################
 
-print(str_stage, "Start testing CPU run time for forward pass")
-data = tqdm(dataloaders, total=len(dataloaders), ncols=120)
-# Compute cpu runtime for whole validation set
+print(str_stage, "Start testing inference time")
+data = tqdm(dataloaders, total=len(dataloaders), ncols=80)
+model.eval()
+# Compute inference runtime
 total_start = time.time()
 batch_time = []
-for i, (inputs, labels) in enumerate(data):
-    inputs = inputs.to(device)
-    labels = labels.to(device)
-    # Compute cpu runtime per batch
-    batch_start = time.time()
+for i, anns_dict in enumerate(data):
+    inputs = anns_dict['anns_loaded'][0].to(device)
     with torch.no_grad():
-        outputs = model(inputs)
-        _, predicts = torch.max(outputs, 1)
-    batch_elapsed = time.time() - batch_start
+        batch_start = time.time()
+        if opt.net == 'efficientnet':
+            outputs = model.extract_features(inputs)
+        else:
+            outputs = model(inputs).squeeze(-1).squeeze(-1)
+        batch_elapsed = time.time() - batch_start
     batch_time.append(batch_elapsed)
-    if i == 99:
-        break
 total_elapsed = time.time() - total_start
-print(str_stage, "CPU run time: maximum {:.0f}m {:.0f}s spent in all batches forwarding".format(
-    max(batch_time) // 60, max(batch_time) % 60))
-print(str_stage, "CPU run time: average {:.0f}m {:.0f}s spent in all batches forwarding".format(
-    np.mean(batch_time) // 60, np.mean(batch_time) % 60))
-print(str_stage, "CPU run time: {:.0f}m {:.0f}s spent forwarding {} batches with a batch size of {}".format(
-    total_elapsed // 60, total_elapsed % 60, i+1, opt.batch_size))
+print(str_stage, "Maximum inference time: {}s".format(max(batch_time)))
+print(str_stage, "Average inference time: {}s".format(np.mean(batch_time)))
+print(str_stage, "Overall inference time: {}s".format(np.sum(total_elapsed)))
