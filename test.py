@@ -35,16 +35,16 @@ else:
 
 print(str_stage, "Setting up models with image size: {}".format(opt.input_size))
 model = models.get_model(opt)
-# state_dicts = torch.load(opt.net_path, map_location=device)
-# # original saved file with DataParallel
-# # create new OrderedDict that does not contain `module`.
-# # ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
-# new_state_dicts = OrderedDict()
-# for k, v in state_dicts['net'].items():
-#     name = k[7:]
-#     # name = k.replace(".module", "")
-#     new_state_dicts[name] = v
-# model.load_state_dict(new_state_dicts)
+state_dicts = torch.load(opt.net_path, map_location=device)
+# original saved file with DataParallel
+# create new OrderedDict that does not contain `module`.
+# ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+new_state_dicts = OrderedDict()
+for k, v in state_dicts['net'].items():
+    name = k[7:]
+    # name = k.replace(".module", "")
+    new_state_dicts[name] = v
+model.load_state_dict(new_state_dicts)
 for param in model.parameters():
     param.requires_grad = False
 print("# model parameters: {:,d}".format(
@@ -85,15 +85,16 @@ total_start = time.time()
 batch_time = []
 for i, anns_dict in enumerate(data):
     inputs = anns_dict['anns_loaded'][0].to(device)
+    batch_start = time.time()
     with torch.no_grad():
-        batch_start = time.time()
         if opt.net == 'efficientnet':
             outputs = model.extract_features(inputs)
         else:
             outputs = model(inputs).squeeze(-1).squeeze(-1)
-        batch_elapsed = time.time() - batch_start
-    batch_time.append(batch_elapsed)
+    batch_time.append(time.time() - batch_start)
 total_elapsed = time.time() - total_start
-print(str_stage, "Maximum inference time: {}s".format(max(batch_time)))
-print(str_stage, "Average inference time: {}s".format(np.mean(batch_time)))
-print(str_stage, "Overall inference time: {}s".format(np.sum(total_elapsed)))
+print(str_stage, "Maximum inference time: {}s".format(np.round(max(batch_time), 4)))
+print(str_stage, "Average inference time (data loading time excluded): {} ± {} s/per {} image".format(
+    np.round(np.mean(batch_time), 4), np.round(np.std(batch_time), 4), opt.batch_size))
+print(str_stage, "Total inference time (data loading time included): {} s/per {} image".format(
+    np.round(total_elapsed / 10, 4), opt.batch_size))
