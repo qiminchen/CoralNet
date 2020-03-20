@@ -18,7 +18,7 @@ for patch_size in patch_sizes:
             # torch.cuda.synchronize()
             t1 = time.perf_counter()
             run_times.append((t1 - t0)/batch_size)
-        print('[Batchsize: {}, patch size: {}] '
+        print('[batch size: {}, patch size: {}] '
               'Time per patch: {:.4f} +- {:.4f} seconds'.
             format(batch_size,
                    patch_size,
