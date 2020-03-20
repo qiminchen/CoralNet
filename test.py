@@ -35,16 +35,16 @@ else:
 
 print(str_stage, "Setting up models with image size: {}".format(opt.input_size))
 model = models.get_model(opt)
-state_dicts = torch.load(opt.net_path, map_location=device)
-# original saved file with DataParallel
-# create new OrderedDict that does not contain `module`.
-# ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
-new_state_dicts = OrderedDict()
-for k, v in state_dicts['net'].items():
-    name = k[7:]
-    # name = k.replace(".module", "")
-    new_state_dicts[name] = v
-model.load_state_dict(new_state_dicts)
+# state_dicts = torch.load(opt.net_path, map_location=device)
+# # original saved file with DataParallel
+# # create new OrderedDict that does not contain `module`.
+# # ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+# new_state_dicts = OrderedDict()
+# for k, v in state_dicts['net'].items():
+#     name = k[7:]
+#     # name = k.replace(".module", "")
+#     new_state_dicts[name] = v
+# model.load_state_dict(new_state_dicts)
 for param in model.parameters():
     param.requires_grad = False
 print("# model parameters: {:,d}".format(
@@ -81,20 +81,23 @@ print(str_stage, "Start testing inference time")
 data = tqdm(dataloaders, total=len(dataloaders), ncols=80)
 model.eval()
 # Compute inference runtime
-total_start = time.time()
-batch_time = []
+inference_time, batch_time = [], []
 for i, anns_dict in enumerate(data):
+    infer_start = time.time()
     inputs = anns_dict['anns_loaded'][0].to(device)
-    batch_start = time.time()
     with torch.no_grad():
         if opt.net == 'efficientnet':
             outputs = model.extract_features(inputs)
         else:
             outputs = model(inputs).squeeze(-1).squeeze(-1)
-    batch_time.append(time.time() - batch_start)
-total_elapsed = time.time() - total_start
-print(str_stage, "Maximum inference time: {}s".format(np.round(max(batch_time), 4)))
+    infer_elapsed = time.time() - infer_start
+    # Inference time only
+    inference_time.append(infer_elapsed)
+    # Inference time + data loading time
+    batch_time.append(torch.sum(anns_dict['time']).item() + infer_elapsed)
+    torch.cuda.empty_cache()
+print(str_stage, "Maximum inference time: {}s".format(np.round(max(inference_time), 4)))
 print(str_stage, "Average inference time (data loading time excluded): {} ± {} s/per {} image".format(
+    np.round(np.mean(inference_time), 4), np.round(np.std(inference_time), 4), opt.batch_size))
+print(str_stage, "Average batch time (data loading time included): {} ± {} s/per {} image".format(
     np.round(np.mean(batch_time), 4), np.round(np.std(batch_time), 4), opt.batch_size))
-print(str_stage, "Total inference time (data loading time included): {} s/per {} image".format(
-    np.round(total_elapsed / 10, 4), opt.batch_size))
