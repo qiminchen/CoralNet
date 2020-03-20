@@ -5,12 +5,12 @@ from models.efficientnet import efficientnet
 
 model = efficientnet(False, 'b0', 1000, False, 1024)
 
-batch_sizes = [1, 10]
+batch_sizes = [1, 10, 25]
 patch_sizes = [168, 224]
-for batch_size in batch_sizes:
-    for patch_size in patch_sizes:
+for patch_size in patch_sizes:
+    for batch_size in batch_sizes:
         run_times = []
-        for i in range(10):
+        for _ in range(10):
             patch = torch.rand(batch_size, 3, patch_size, patch_size)
             t0 = time.perf_counter()
             res = model.extract_features(patch)
