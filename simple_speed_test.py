@@ -9,12 +9,12 @@ model = efficientnet(False, 'b0', 1000, False, 1280)
 batch_sizes = [1, 10, 25]
 patch_sizes = [168, 224]
 devices = ['cpu', 'cuda']
-for patch_size in patch_sizes:
-    for batch_size in batch_sizes:
-        for dev in devices:
+for dev in devices:
+    device = torch.device(dev)
+    model = model.to(device)
+    for patch_size in patch_sizes:
+        for batch_size in batch_sizes:
             run_times = []
-            device = torch.device(dev)
-            model = model.to(device)
             for _ in range(10):
                 patch = torch.rand(batch_size, 3, patch_size, patch_size).to(device)
                 t0 = time.perf_counter()
