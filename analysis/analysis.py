@@ -77,11 +77,8 @@ def get_labels_meta():
 
     # step 2 - get labels with suspicious names
     # consider lower cases and upper cases and substrings
-    lower_cases = [i.lower() for i in invalid_labels]
-    upper_cases = [i.upper() for i in invalid_labels]
     contain_substr_from_invalid = [i['name'] for i in label_meta
-                                   if any(substr in i['name'] for substr in
-                                          set(invalid_labels).union(lower_cases, upper_cases))]
+                                   if any(substr.lower() in i['name'].lower() for substr in invalid_labels)]
     label_removed = [i for i in label_meta if i['name'] in contain_substr_from_invalid]
     # label_meta = [i for i in label_meta if i['name'] not in contain_substr_from_invalid]
 
