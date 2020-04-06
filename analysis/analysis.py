@@ -12,7 +12,13 @@ beta_cropped_root = '/media/qimin/samsung1tb/beta_cropped'
 
 invalid_labels = ['Unclear', 'All other', 'Off', 'Fuzz', 'TAPE', 'Unknown', 'Framer', 'off' 'subject',
                   'Water', 'Other', 'Not root', 'Blurry', 'No Data', 'None', 'Dead', 'Others', 'Dots off',
-                  'Non-sample', 'white net', 'OUT', 'out of focus', 'Trash', 'yellow net', 'Worms', 'Cage']
+                  'Non-sample', 'white net', 'OUT', 'Out of focus', 'Trash', 'yellow net', 'Worms', 'Cage',
+                  'CREP-T1 Tape/Wand', 'Unknown Invertebrate', 'Unknown Sponge/Tunicate', 'Dead Oyster',
+                  'Unknown Invert', 'Serpulid worms', 'Serpulid worms, unidentified', 'Unknown, other',
+                  'Trash: Human Origin', 'Out-planted colony', 'Others OT', 'Other benthic', 'unknown whait',
+                  'No dead coral', 'unknown dead massive', 'Unknown 1', 'Unknown 2', 'Unknown 3', 'Unknown 4',
+                  'Unknown 5', 'Unknown 6', 'Unknown 7', 'Unknown 8', 'Unknown 9', 'Unknown 10', 'Unknown 11',
+                  'Unknown 12', 'Unknown 13', 'Unknown 14', 'off subject', 'Dead oysters']
 
 
 def get_sources_meta():
@@ -75,12 +81,12 @@ def get_labels_meta():
     # contains no duplicates
     label_meta = [i for i in label_meta if i['duplicate_of'] == 'None']
 
-    # step 2 - get labels with suspicious names
+    # step 2 - remove labels with suspicious names
     # consider lower cases and upper cases and substrings
-    contain_substr_from_invalid = [i['name'] for i in label_meta
-                                   if any(substr.lower() in i['name'].lower() for substr in invalid_labels)]
-    label_removed = [i for i in label_meta if i['name'] in contain_substr_from_invalid]
-    # label_meta = [i for i in label_meta if i['name'] not in contain_substr_from_invalid]
+    # contain_substr_from_invalid = [i['name'] for i in label_meta
+    #                                if any(substr.lower() in i['name'].lower() for substr in invalid_labels)]
+    # label_removed = [i for i in label_meta if i['name'] in contain_substr_from_invalid]
+    label_meta = [i for i in label_meta if i['name'] not in invalid_labels]
 
     # step 3 - compute ann_count_training and #_sources_present
     duplicates_dict = {i['id']: i['duplicate_of_id'] for i in duplicates_meta}
@@ -114,11 +120,14 @@ def get_labels_meta():
         dict_writer.writeheader()
         dict_writer.writerows(label_meta)
 
-    keys = label_removed[0].keys()
-    with open(join(stat_root, 'label_removed.csv'), 'w', newline='') as output_file:
-        dict_writer = csv.DictWriter(output_file, keys)
-        dict_writer.writeheader()
-        dict_writer.writerows(label_removed)
+    with open(join(stat_root, 'labels_meta.json'), 'w') as output_file:
+        json.dump(label_meta, output_file, indent=2)
+
+    # keys = label_removed[0].keys()
+    # with open(join(stat_root, 'label_removed.csv'), 'w', newline='') as output_file:
+    #     dict_writer = csv.DictWriter(output_file, keys)
+    #     dict_writer.writeheader()
+    #     dict_writer.writerows(label_removed)
 
     return True
 
