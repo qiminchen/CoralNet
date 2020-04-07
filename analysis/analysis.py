@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from os.path import join
 import json
 import copy
@@ -132,5 +133,20 @@ def get_labels_meta():
     return True
 
 
+def labels_filter():
+    with open(join(stat_root, 'labels_meta.json')) as f:
+        label_meta = json.load(f)
+    total_anns = sum([i['ann_count_in_training'] for i in label_meta])
+    for nbr_source in [2, 3, 4, 5]:
+        for nbr_patch in [100, 200, 500, 1000]:
+            results = [i['ann_count_in_training'] for i in label_meta
+                       if i['ann_count_in_training'] >= nbr_patch and
+                       i['#_sources_present_in_training'] >= nbr_source]
+            print('[min patches: {}, min sources presented: {}]: {} %, {} / {}, {} / {}'.format(
+                nbr_patch, nbr_source, np.round(100*sum(results)/total_anns, 2), sum(results), total_anns,
+                len(results), len(label_meta)))
+    return True
+
+
 if __name__ == '__main__':
-    ok = get_labels_meta()
+    ok = labels_filter()
