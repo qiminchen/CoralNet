@@ -9,7 +9,7 @@ from collections import Counter
 
 data_root = '/media/qimin/seagate5tb/coral'
 stat_root = '/mnt/sda/coral/beta_status'
-beta_cropped_root = '/media/qimin/samsung1tb/beta_cropped'
+beta_cropped_root = '/mnt/sda/beta_cropped'
 
 invalid_labels = ['Unclear', 'All other', 'Off', 'Fuzz', 'TAPE', 'Unknown', 'Framer', 'off' 'subject',
                   'Water', 'Other', 'Not root', 'Blurry', 'No Data', 'None', 'Dead', 'Others', 'Dots off',
@@ -19,7 +19,9 @@ invalid_labels = ['Unclear', 'All other', 'Off', 'Fuzz', 'TAPE', 'Unknown', 'Fra
                   'Trash: Human Origin', 'Out-planted colony', 'Others OT', 'Other benthic', 'unknown whait',
                   'No dead coral', 'unknown dead massive', 'Unknown 1', 'Unknown 2', 'Unknown 3', 'Unknown 4',
                   'Unknown 5', 'Unknown 6', 'Unknown 7', 'Unknown 8', 'Unknown 9', 'Unknown 10', 'Unknown 11',
-                  'Unknown 12', 'Unknown 13', 'Unknown 14', 'off subject', 'Dead oysters']
+                  'Unknown 12', 'Unknown 13', 'Unknown 14', 'off subject', 'Dead oysters', 'Wand', 'CRED-Wand',
+                  'ARMS-CREP-Unavailable', 'ARMS-CREP-Unclassified/Unknown', 'CRED-Unclassified/Unknown',
+                  'CREP-T1 Unclassified/Unknown benthos']
 
 
 def get_sources_meta():
@@ -124,18 +126,18 @@ def get_labels_meta():
     with open(join(stat_root, 'labels_meta.json'), 'w') as output_file:
         json.dump(label_meta, output_file, indent=2)
 
-    # keys = label_removed[0].keys()
-    # with open(join(stat_root, 'label_removed.csv'), 'w', newline='') as output_file:
-    #     dict_writer = csv.DictWriter(output_file, keys)
-    #     dict_writer.writeheader()
-    #     dict_writer.writerows(label_removed)
+    with open(join(stat_root, 'duplicates_meta.json'), 'w') as output_file:
+        json.dump(duplicates_meta, output_file, indent=2)
 
     return True
 
 
-def labels_filter():
+def get_final_labels():
     with open(join(stat_root, 'labels_meta.json')) as f:
         label_meta = json.load(f)
+    with open(join(stat_root, 'duplicates_meta.json')) as f:
+        duplicate_meta = json.load(f)
+
     total_anns = sum([i['ann_count_in_training'] for i in label_meta])
     for nbr_source in [2, 3, 4, 5]:
         for nbr_patch in [100, 200, 500, 1000]:
@@ -145,8 +147,78 @@ def labels_filter():
             print('[min patches: {}, min sources presented: {}]: {} %, {} / {}, {} / {}'.format(
                 nbr_patch, nbr_source, np.round(100*sum(results)/total_anns, 2), sum(results), total_anns,
                 len(results), len(label_meta)))
+
+    # append duplicate labels meta
+    final_labels = [i for i in label_meta if i['ann_count_in_training'] >= 1000 and
+                    i['#_sources_present_in_training'] >= 3]
+    duplicate_labels = [i for i in duplicate_meta if i['duplicate_of_id'] in [i['id'] for i in final_labels]]
+
+    # label mapping
+    label_dict = {final_labels[i]['id']: i for i in range(len(final_labels))}
+    for duplicate in duplicate_labels:
+        label_dict[duplicate['id']] = label_dict[duplicate['duplicate_of_id']]
+
+    keys = final_labels[0].keys()
+    with open(join(stat_root, 'final_labels_meta.csv'), 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(final_labels)
+
+    with open(join(stat_root, 'final_labels_meta.json'), 'w') as output_file:
+        json.dump(final_labels, output_file, indent=2)
+
+    with open(join(stat_root, 'labels_mapping.json'), 'w') as output_file:
+        json.dump(label_dict, output_file, indent=2)
+
+    return True
+
+
+def get_training_images():
+    """
+    get training images list (augmentation images excluded)
+    :return: images_all.txt and is_train.txt
+    """
+    with open(join(stat_root, 'training_sources.txt')) as f:
+        line = f.read()
+    training_sources = line.split('\n')
+    with open(join(stat_root, 'labels_mapping.json')) as f:
+        label_id = json.load(f)
+    label_id = [str(i) for i in label_id.keys()]
+
+    # list all images grouped by labels
+    images_dict = {}
+    for source in training_sources:
+        labels = os.listdir(join(beta_cropped_root, source))
+        for label in labels:
+            if label in label_id:
+                lst = [join(source, i) for i in os.listdir(join(beta_cropped_root, source, label))]
+                if label not in images_dict:
+                    images_dict[label] = lst
+                else:
+                    images_dict[label] += lst
+
+    # randomly split train and test by 90/10
+    images_all = []
+    is_train = []
+    for key, value in images_dict.items():
+        train = ['True'] * len(value)
+        rand_idx = np.random.choice(len(value), int(len(value) * 0.1), replace=False)
+        for idx in rand_idx:
+            train[idx] = 'False'
+        is_train += train
+        images_all += value
+
+    with open(join(stat_root, 'images_all.txt'), 'w') as f:
+        f.write('\n'.join(images_all))
+    f.close()
+    with open(join(stat_root, 'is_train.txt'), 'w') as f:
+        f.write('\n'.join(is_train))
+    f.close()
+
     return True
 
 
 if __name__ == '__main__':
-    ok = labels_filter()
+    # ok = get_labels_meta()
+    # ok = get_final_labels()
+    ok = get_training_images()
