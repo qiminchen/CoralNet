@@ -46,10 +46,10 @@ def geometric_augmentation(source, data_root):
             # 7 augmented images
             augmented = [np.rot90(img), np.rot90(img, 2), np.rot90(img, 3), np.fliplr(img),
                          np.fliplr(np.rot90(img)), np.fliplr(np.rot90(img, 2)), np.fliplr(np.rot90(img, 3))]
-            augmented = random.choices(augmented, k=num_augmented)
-            for i, ad in enumerate(augmented):
-                Image.fromarray(ad).save(join(data_root, source, label,
-                                              image.split('.')[0] + '_ad_' + str(i) + '.jpg'))
+            augmented = random.sample(augmented, k=num_augmented)
+            for i, ai in enumerate(augmented):
+                Image.fromarray(ai).save(join(data_root, source, label,
+                                              image.split('.')[0] + '_da_' + str(i) + '.jpg'))
     return True
 
 
