@@ -104,7 +104,6 @@ def get_labels_meta():
             with open(join(data_root, source, 'images', i), 'r') as f:
                 label = json.load(f)
             labels += [duplicates_dict[i['label']] if i['label'] in duplicates_dict else i['label'] for i in label]
-
         ann_count_training += labels
         sources_present += list(set(labels))
         print('[{}: {} complete]'.format(idx + 1, source))
@@ -178,12 +177,12 @@ def get_training_images():
     get training images list (augmentation images excluded)
     :return: images_all.txt and is_train.txt
     """
-    with open(join(stat_root, 'training_sources.txt')) as f:
+    with open(join(stat_root, 'training_sources.txt'), 'r') as f:
         line = f.read()
     training_sources = line.split('\n')
-    with open(join(stat_root, 'labels_mapping.json')) as f:
+    with open(join(stat_root, 'labels_mapping.json'), 'r') as f:
         label_id = json.load(f)
-    label_id = [str(i) for i in label_id.keys()]
+    label_id = list(label_id.keys())
 
     # list all images grouped by labels
     images_dict = {}
@@ -191,7 +190,7 @@ def get_training_images():
         labels = os.listdir(join(beta_cropped_root, source))
         for label in labels:
             if label in label_id:
-                lst = [join(source, i) for i in os.listdir(join(beta_cropped_root, source, label))]
+                lst = [join(source, label, i) for i in os.listdir(join(beta_cropped_root, source, label))]
                 if label not in images_dict:
                     images_dict[label] = lst
                 else:
