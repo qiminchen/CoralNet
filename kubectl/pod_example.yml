@@ -3,15 +3,15 @@ kind: Pod # Pod can only get 2-gpu and 8G memory at most.
 metadata:
   name: qic003-pod
 spec:
-#  affinity:
-#    nodeAffinity:
-#      requiredDuringSchedulingIgnoredDuringExecution:
-#        nodeSelectorTerms:
-#        - matchExpressions:
-#          - key: gpu-type
-#            operator: In
-#            values:
-#            - 1080Ti
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: gpu-type
+            operator: In
+            values:
+            - 1080Ti
 #            - 2080Ti
 #            - V100
 #            - titan-xp
@@ -21,15 +21,6 @@ spec:
     # Use image from DockerHub as below since it is more stable.
     image: liam951120/coralnet:latest
     args: ["sleep", "infinity"]
-#    command: ["/bin/bash", "-c"]
-#    args:
-#      - source ../miniconda/etc/profile.d/conda.sh;
-#        conda activate coralnet;
-#        cd ..;
-#        cp -r qic003/CoralNet-master ./;
-#        cd CoralNet-master/;
-#        chmod +x scripts/train_resnet.sh;
-#        ./scripts/train_resnet.sh;
     volumeMounts:
     - mountPath: /qic003
       name: qic003
