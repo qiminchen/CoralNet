@@ -25,15 +25,16 @@ class Transformer:
             ]),
         }
         # photometric transformation
-        self.photometric = transforms.RandomChoice([
-            transforms.ColorJitter(brightness=0.2),
-            transforms.ColorJitter(contrast=0.3),
-            transforms.ColorJitter(saturation=0.5),
-            transforms.ColorJitter(hue=0.05),
-            transforms.ColorJitter(brightness=0, contrast=0, saturation=0, hue=0),
-            transforms.ColorJitter(brightness=0.2, contrast=0.3, saturation=0.5, hue=0.05),
-        ])
-
+        self.photometric = transforms.RandomApply([
+            transforms.RandomChoice([
+                transforms.ColorJitter(brightness=0.2),
+                transforms.ColorJitter(contrast=0.3),
+                transforms.ColorJitter(saturation=0.5),
+                transforms.ColorJitter(hue=0.05),
+                transforms.ColorJitter(brightness=0.2, contrast=0.3, saturation=0.5, hue=0.05),
+            ])
+        ], p=0.5)
+        # to tensor and normalize
         self.totensor = transforms.ToTensor()
 
     def __call__(self, x, types):

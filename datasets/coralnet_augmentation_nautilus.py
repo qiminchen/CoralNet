@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import boto3
+import random
 import numpy as np
 import torch.utils.data as data
 from torchvision import transforms
@@ -17,51 +18,65 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 class Dataset(data.Dataset):
 
     @classmethod
-    def read_bool_status(cls, status_file):
-        with open(status_file) as f:
-            lines = f.read()
-        return [x == 'True' for x in lines.split('\n')]
+    def get_k(cls, num, rarity):
+        if rarity >= 100000:
+            return min(num, 100000)
+        bounds = [12500, 14285, 16666, 20000, 25000, 33333, 50000, 100000]
+        ratio = 8
+        for idx, (lower, upper) in enumerate(zip(bounds[:-1], bounds[1:]), 1):
+            if lower < rarity <= upper:
+                ratio = 8 - idx
+        return int(num * ratio)
 
     def __init__(self, opt, mode='train'):
         assert mode in ['train', 'valid']
-        self.mode = mode
-        self.transformer = Transformer()
 
         # Build connection
         s3 = boto3.resource('s3', endpoint_url="https://s3.nautilus.optiputer.net")
         bucket = s3.Bucket('qic003')
 
-        img_bucket = bucket.Object('status/beta_status/images_all.txt')
+        img_bucket = bucket.Object('status/beta_status/images_all_ga.json')
         images_list = img_bucket.get()['Body'].read().decode('utf-8')
-        images_list = images_list.split('\n')
+        images_list = json.load(images_list)
 
-        is_train_bucket = bucket.Object('status/beta_status/is_train.txt')
+        is_train_bucket = bucket.Object('status/beta_status/is_train_ga.json')
         is_train = is_train_bucket.get()['Body'].read().decode('utf-8')
-        is_train = [x == 'True' for x in is_train.split('\n')]
+        is_train = json.load(is_train)
 
         labels_bucket = bucket.Object('status/beta_status/labels_mapping.json')
         labels_map = labels_bucket.get()['Body'].read().decode('utf-8')
         labels_map = json.loads(labels_map)
         assert len(images_list) == len(is_train)
 
+        rarity_bucket = bucket.Object('status/beta_status/labels_rarity.json')
+        labels_rarity = rarity_bucket.get()['Body'].read().decode('utf-8')
+        labels_rarity = json.load(labels_rarity)
+
+        # sub-sampling and super-sampling
+        target_list = []
+        for k, v in images_list.items():
+            if mode == 'valid':
+                target_list += [i for i in v if is_train[i] == 'False']
+            else:
+                target_list += random.sample([i for i in v if is_train[i] == 'True'],
+                                             k=self.get_k(len(v), labels_rarity[k]))
+
+        # example: "s1136/1397/i910611_s1136_1397_365_2556_ga7.jpg"
         samples = []
-        for i, img in enumerate(images_list):
-            # img example: 's800/1888/i674838_s800_1888_126_1250_ga0.jpg'
-            label = labels_map[img.split('/')[1]]
-            ga_type = img.split('/')[-1].split('.')[0].split('_')[-1]
-            item_in_split = ((self.mode == 'train') == is_train[i])
-            if item_in_split:
-                samples.append({
-                    'image_path': join('beta_cropped', img),
-                    'label': label,
-                    'ga_type': ga_type,
-                })
+        for img in target_list:
+            samples.append({
+                'path': join('beta_cropped', img.split('_ga')[0] + '.jpg'),
+                'label': labels_map[img.split('/')[1]],
+                'ga_type': img.split('_')[-1].split('.')[0]
+            })
+
         self.samples = samples
         self.bucket = bucket
+        self.transformer = Transformer()
 
     def __getitem__(self, idx):
         image = self.samples[idx]
-        image_object = self.bucket.Object(image['image_path'])
+        image_object = self.bucket.Object(image['path'])
         try:
             img = Image.open(BytesIO(image_object.get()['Body'].read())).convert('RGB')
             img = self.transformer(img, image['ga_type'])
