@@ -178,9 +178,10 @@ else:
         lr_scheduler.load_state_dict(checkpoint['scheduler'])
         try:
             csv_log = pd.read_csv(os.path.join(logdir, 'epoch_loss.csv'))
-            initial_epoch = (csv_log['epoch'].max() + 1) if csv_log['phase'][-1] == 'valid' \
+            initial_epoch = (csv_log['epoch'].max() + 1) if csv_log['phase'].tail(1).values[0] == 'valid' \
                 else csv_log['epoch'].max()
-            current_batch = 0 if csv_log['phase'][-1] == 'valid' else csv_log['batch'][-1]
+            current_batch = 0 if csv_log['phase'].tail(1).values[0] == 'valid' \
+                else csv_log['batch'].tail(1).values[0]
             current_phase = 'valid' if current_batch == len(dataloaders['train']) else 'train'
         except KeyError as err:
             # Old saved model does not have epoch as additional values
