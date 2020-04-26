@@ -81,58 +81,125 @@ Refer to [Storage](https://pacificresearchplatform.org/userdocs/storage/ceph-s3/
 ### Spawn cluster
 Refer to [Running](https://pacificresearchplatform.org/userdocs/running/jupyter/) for more details. Nautilus has two types of cluster: `Pod` and `Job`
 
-- `Pod`: You can only request 2-GPU and 8G CPU RAM at most as the pod example will be automatically destroyed in 6 hours. Using `Pod` for interactive debugging is suggested. Refer to [POD](https://pacificresearchplatform.org/userdocs/running/jupyter/) for more details.
+1. **`Pod`**: You can only request 2-GPU and 8G CPU RAM at most as the pod example will be automatically destroyed in 6 hours. Using `Pod` for interactive debugging is suggested. Refer to [POD](https://pacificresearchplatform.org/userdocs/running/jupyter/) for more details.
   
-  Copy and save the following code to `e.g. pod_example.yml` file, change the profiles to which the arrows point and remove them before saving the file:
+    Copy and save the following code to `e.g. pod_example.yml` file, change the configuration to which the arrows point and remove arrows and symbols before saving the file:
       
-      apiVersion: v1
-      kind: Pod
-      metadata:
-        name: PodName  <------ change here
-      spec:
-        restartPolicy: Never
-        containers:
-        - name: gpu-container
-          image: gitlab-registry.nautilus.optiputer.net/prp/jupyterlab:latest  <------ default image provided by nautilus, change to your own image if needed
-          args: ["sleep", "infinity"]
-          volumeMounts:
-          - mountPath: /PathName  <------ change name here
-            name: Name_1  ---------
-          - mountPath: /dev/shm   |
-            name: dshm            |
-          resources:              |
-            limits:               |
-              memory: 8Gi         |  <------ these two names should be the same, do not forget to delete these symbols
-              nvidia.com/gpu: 1   |
-            requests:             |
-              memory: 8Gi         |
-              nvidia.com/gpu: 1   |
-        volumes:                  |
-          - name: Name_1  ---------
-            persistentVolumeClaim:
-              claimName: Name_2  <------ name here should be the same as the name in ceph.yml above
-          - name: dshm
-            emptyDir:
-              medium: Memory
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: PodName  <------ change here
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: gpu-container
+            image: gitlab-registry.nautilus.optiputer.net/prp/jupyterlab:latest  <------ default image provided by nautilus, change to your own image if needed
+            args: ["sleep", "infinity"]
+            volumeMounts:
+            - mountPath: /PathName  <------ change name here
+              name: Name_1  ---------
+            - mountPath: /dev/shm   |
+              name: dshm            |
+            resources:              |
+              limits:               |
+                memory: 8Gi         |  <------ these two names should be the same, do not forget to delete these symbols
+                nvidia.com/gpu: 1   |
+              requests:             |
+                memory: 8Gi         |
+                nvidia.com/gpu: 1   |
+          volumes:                  |
+            - name: Name_1  ---------
+              persistentVolumeClaim:
+                claimName: Name_2  <------ name here should be the same as the name in ceph.yml above
+            - name: dshm
+              emptyDir:
+                medium: Memory
   
-  Spawn a pod:
+    Spawn a pod:
   
-      $ kubectl create -f ./path/to/pod_example.yml
+        $ kubectl create -f ./path/to/pod_example.yml
   
-  Get pod list:
+    Get pod list:
       
-      $ kubectl get pods
+        $ kubectl get pods
       
-  Get pod description:
+    Get pod description:
       
-      $ kubectl describe pod pod_name
+        $ kubectl describe pod pod_name
       
-  Launch pod in interactive mode:
+    Launch pod in interactive mode:
   
-      $ kubectl exec -it pod_name bash
+        $ kubectl exec -it pod_name bash
       
-  Delete pod:
+    Delete pod:
 
-      $ kubectl delete pod pod_name
+        $ kubectl delete pod pod_name
 
-- `Job`: `Jobs` in Nautilus are not limited in runtime, you can only run jobs with meaningful `command` field. Running in manual mode (`sleep infinity command` and manual start of computation) is **prohibited**. Refer to [JOB](https://pacificresearchplatform.org/userdocs/running/jobs/) for more details.
+2. **`Job`**: `Jobs` in Nautilus are not limited in runtime, you can only run jobs with meaningful `command` field. Running in manual mode (`sleep infinity command` and manual start of computation) is **prohibited**. Refer to [JOB](https://pacificresearchplatform.org/userdocs/running/jobs/) for more details.
+
+    Copy and save the following code to `e.g. job_example.yml` file, change the configuration to which the arrows point and remove arrows and symbols before saving the file:
+        
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+           name: JobName  <------ change here
+        spec:
+          template:
+            spec:
+              containers:
+              - name: gpu-container
+                image: gitlab-registry.nautilus.optiputer.net/prp/jupyterlab:latest  <------ default image provided by nautilus, change to your own image if needed
+                command: ["/bin/bash", "-c"]                     |
+                args:                                            |
+                  - source ../miniconda/etc/profile.d/conda.sh;  |   <----- one way to run your program automatically, please change
+                    conda activate coralnet;                     |
+                    chmod +x scripts/train.sh;                   |
+                    ./scripts/train.sh;                          |
+                volumeMounts:
+                - mountPath: /PathName  <------ change name here
+                  name: Name_1  ----------
+                - mountPath: /dev/shm    |   <------ these two names should be the same
+                  name: dshm             |
+                resources:               |
+                  limits:                |
+                    memory: 96Gi         |
+                    nvidia.com/gpu: 1    |
+                    cpu: "6"             |
+                  requests:              |
+                    memory: 64Gi   <------------- only require resources you need
+                    nvidia.com/gpu: 1   <------------- only require resources you need
+                    cpu: "3"    <------------- only require resources you need
+              volumes:                   |
+                - name: Name_1  ----------
+                  persistentVolumeClaim:
+                    claimName: Name_2  <------ name here should be the same as the name in ceph.yml above
+                - name: dshm
+                  emptyDir:
+                    medium: Memory
+                    
+    Spawn a job:
+  
+        $ kubectl create -f ./path/to/job_example.yml
+  
+    Get job list:
+      
+        $ kubectl get jobs
+        
+    Get pod list:
+      
+        $ kubectl get pods
+    when spawning a job, a pod without runtime limit will be spawned too and it will NOT be completed until your scripts running is finished. All the computational resources will be released once the job is completed.
+      
+    Get pod description:
+      
+        $ kubectl describe pod pod_name
+      
+    Launch pod in interactive mode:
+  
+        $ kubectl exec -it pod_name bash
+      
+    Delete pod:
+
+        $ kubectl delete pod pod_name
+        
+Please refer to [Nautilus Document](https://pacificresearchplatform.org/userdocs/start/toc-start/) for original tutorial.
