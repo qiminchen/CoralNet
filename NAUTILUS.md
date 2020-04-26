@@ -18,10 +18,10 @@ Refer to [Nautilus document](https://ucsd-prp.gitlab.io/userdocs/start/get-acces
   3. Create `/.kube` folder using the command line `mkdir ~/.kube` if not exist and copy the configuration file to this folder
   4. Use the command line to test if kubectl can connect to the Nautilus cluster
   
-          kubectl get pods
+          $ kubectl get pods
      If you have multiple namespaces, specify the namespace to check the cluster
           
-          kubectl get pods -n your_namespace
+          $ kubectl get pods -n your_namespace
      If you’ve got `No resources found`., this indicates your namespace is empty and you can start running in it.
      
 ## Create Nautilus cluster
@@ -45,7 +45,7 @@ Copy and paste the following code to `e.g. ceph.yml` file, change the `name` and
 
 Use the command line to create a PersistentVolumeClaim (PVC), this is one time operation and of course you can create multiple PVC based on your needs:
 
-        kubectl create -f ceph.yml
+        $ kubectl create -f ceph.yml
         
 #### < Ceph S3 >
 Refer to [Storage](https://pacificresearchplatform.org/userdocs/storage/ceph-s3/) for more details. I recommend using nautilus S3 for dataset storage. It used the same S3 protocol but is not related to Amazon. 
@@ -54,12 +54,12 @@ Refer to [Storage](https://pacificresearchplatform.org/userdocs/storage/ceph-s3/
     
   2. Highly recommend installing `awscli` and `awscli-plugin-endpoint` in conda environment using
     
-          pip install awscli awscli-plugin-endpoint
-          aws configure set plugins.endpoint awscli_plugin_endpoint
+          $ pip install awscli awscli-plugin-endpoint
+          $ aws configure set plugins.endpoint awscli_plugin_endpoint
   
   3. Configure `~/.aws/credentials`
   
-          vim ~/.aws/credentials
+          $ vim ~/.aws/credentials
           # Add the following profile to ~/.aws/credentials
           [default]
           aws_access_key_id = aws_access_key_id_requested_from_admin
@@ -72,16 +72,16 @@ Refer to [Storage](https://pacificresearchplatform.org/userdocs/storage/ceph-s3/
           
   5. Create a bucket by running the command line, change the `--region` based on your location:
   
-          aws s3api create-bucket --bucket bucket-name --region us-west-2
+          $ aws s3api create-bucket --bucket bucket-name --region us-west-2
           
   6. Test the connection by running the command line:
   
-          aws s3 ls s3://bucket-name/
+          $ aws s3 ls s3://bucket-name/
           
 ### Spawn cluster
 Refer to [Running](https://pacificresearchplatform.org/userdocs/running/jupyter/) for more details. Nautilus has two types of cluster: `Pod` and `Job`
 
-- `Pod`: You can only request 2-GPU and 8G CPU RAM at most as the pod example will be automatically destroyed in 6 hours. Using `Pod` for interactive debugging is suggested.
+- `Pod`: You can only request 2-GPU and 8G CPU RAM at most as the pod example will be automatically destroyed in 6 hours. Using `Pod` for interactive debugging is suggested. Refer to [POD](https://pacificresearchplatform.org/userdocs/running/jupyter/) for more details.
   
   Copy and save the following code to `e.g. pod_example.yml` file, change the profiles to which the arrows point and remove them before saving the file:
       
@@ -117,20 +117,22 @@ Refer to [Running](https://pacificresearchplatform.org/userdocs/running/jupyter/
   
   Spawn a pod:
   
-      kubectl create -f ./path/to/pod_example.yml
+      $ kubectl create -f ./path/to/pod_example.yml
   
   Get pod list:
       
-      kubectl get pods
+      $ kubectl get pods
       
   Get pod description:
       
-      kubectl describe pod pod_name
+      $ kubectl describe pod pod_name
       
   Launch pod in interactive mode:
   
-      kubectl exec -it pod_name bash
+      $ kubectl exec -it pod_name bash
       
   Delete pod:
 
-      kubectl delete pod pod_name
+      $ kubectl delete pod pod_name
+
+- `Job`: `Jobs` in Nautilus are not limited in runtime, you can only run jobs with meaningful `command` field. Running in manual mode (`sleep infinity command` and manual start of computation) is **prohibited**. Refer to [JOB](https://pacificresearchplatform.org/userdocs/running/jobs/) for more details.
