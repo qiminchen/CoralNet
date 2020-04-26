@@ -26,7 +26,7 @@ Refer to [Nautilus document](https://ucsd-prp.gitlab.io/userdocs/start/get-acces
      
 ## Create Nautilus cluster
 ### Storage
-#### Ceph Posix
+#### < Ceph Posix >
 Refer to [Storage](https://ucsd-prp.gitlab.io/userdocs/storage/toc-storage/) for more details. Before spawning a cluster, you need to create PersistentVolumeClaim (PVC) so it can be attached when spawning the cluster. Note the PVC will not be destroyed when the cluster is terminated so it could be used for storing the intermediate results. The PVC can be used for storing training dataset but I personally do not recommend as intensive I/O operations in PVC is extremely slow, especially for tasks where the dataset is larger than 50Gi and the size per training data is small.
 
 Copy and paste the following code to `e.g. ceph.yml` file, change the `name` and `storage e.g. 500Gi` based on your needs:
@@ -47,7 +47,7 @@ Use the command line to create a PersistentVolumeClaim (PVC), this is one time o
 
         kubectl create -f ceph.yml
         
-#### Ceph S3
+#### < Ceph S3 >
 Refer to [Storage](https://pacificresearchplatform.org/userdocs/storage/ceph-s3/) for more details. I recommend using nautilus S3 for dataset storage. It used the same S3 protocol but is not related to Amazon. 
     
   1. Login to [Rocketchat](https://rocket.nautilus.optiputer.net/home), request `aws_access_key_id` and `aws_secret_access_key` from the admin
@@ -79,3 +79,58 @@ Refer to [Storage](https://pacificresearchplatform.org/userdocs/storage/ceph-s3/
           aws s3 ls s3://bucket-name/
           
 ### Spawn cluster
+Refer to [Running](https://pacificresearchplatform.org/userdocs/running/jupyter/) for more details. Nautilus has two types of cluster: `Pod` and `Job`
+
+- `Pod`: You can only request 2-GPU and 8G CPU RAM at most as the pod example will be automatically destroyed in 6 hours. Using `Pod` for interactive debugging is suggested.
+  
+  Copy and save the following code to `e.g. pod_example.yml` file, change the profiles to which the arrows point and remove them before saving the file:
+      
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: PodName  <------ change here
+      spec:
+        restartPolicy: Never
+        containers:
+        - name: gpu-container
+          image: gitlab-registry.nautilus.optiputer.net/prp/jupyterlab:latest  <------ default image provided by nautilus, change to your own image if needed
+          args: ["sleep", "infinity"]
+          volumeMounts:
+          - mountPath: /PathName  <------ change name here
+            name: Name_1  ---------
+          - mountPath: /dev/shm   |
+            name: dshm            |
+          resources:              |
+            limits:               |
+              memory: 8Gi         |  <------ these two names should be the same, do not forget to delete these symbols
+              nvidia.com/gpu: 1   |
+            requests:             |
+              memory: 8Gi         |
+              nvidia.com/gpu: 1   |
+        volumes:                  |
+          - name: Name_1  ---------
+            persistentVolumeClaim:
+              claimName: Name_2  <------ name here should be the same as the name in ceph.yml above
+          - name: dshm
+            emptyDir:
+              medium: Memory
+  
+  Spawn a pod:
+  
+      kubectl create -f ./path/to/pod_example.yml
+  
+  Get pod list:
+      
+      kubectl get pods
+      
+  Get pod description:
+      
+      kubectl describe pod pod_name
+      
+  Launch pod in interactive mode:
+  
+      kubectl exec -it pod_name bash
+      
+  Delete pod:
+
+      kubectl delete pod pod_name
