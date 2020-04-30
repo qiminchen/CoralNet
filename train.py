@@ -11,7 +11,8 @@ import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
-from datasets.coralnet_nautilus import collate_data
+from datasets.coralnet_augmentation_nautilus import collate_data
+from util.util_augmentation import dataset_sampling
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
 
@@ -116,26 +117,28 @@ dataset = {
     'train': Dataset(opt, mode='train'),
     'valid': Dataset(opt, mode='valid')
 }
-dataloaders = {
-    'train': torch.utils.data.DataLoader(
-        dataset['train'],
-        batch_size=opt.batch_size,
-        shuffle=True,
-        num_workers=opt.workers,
-        pin_memory=True,
-        drop_last=True,
-        collate_fn=collate_data,
-    ),
-    'valid': torch.utils.data.DataLoader(
-        dataset['valid'],
-        batch_size=opt.batch_size,
-        num_workers=opt.workers,
-        pin_memory=True,
-        drop_last=True,
-        shuffle=False,
-        collate_fn=collate_data,
-    ),
-}
+# only for data augmentation training
+dataset, dataloaders = dataset_sampling(dataset, opt, collate_data)
+# dataloaders = {
+#    'train': torch.utils.data.DataLoader(
+#        dataset['train'],
+#        batch_size=opt.batch_size,
+#        shuffle=True,
+#        num_workers=opt.workers,
+#        pin_memory=True,
+#        drop_last=True,
+#        collate_fn=collate_data,
+#    ),
+#    'valid': torch.utils.data.DataLoader(
+#        dataset['valid'],
+#        batch_size=opt.batch_size,
+#        num_workers=opt.workers,
+#        pin_memory=True,
+#        drop_last=True,
+#        shuffle=False,
+#        collate_fn=collate_data,
+#    ),
+# }
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
       (time.time() - start_time))
 print(str_verbose, "# training points: " + str(len(dataset['train'])))
@@ -149,6 +152,8 @@ lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=opt.max_lr,
 
 print(str_stage, "Resuming model information")
 initial_epoch = 1
+current_batch = 0
+current_phase = 'train'
 if opt.resume == 0:
     checkpoint = copy.deepcopy(model.state_dict())
     best = copy.deepcopy(model.state_dict())
@@ -172,9 +177,12 @@ else:
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['scheduler'])
         try:
-            epoch_loss_csv = os.path.join(logdir, 'epoch_loss.csv')
-            initial_epoch += pd.read_csv(epoch_loss_csv)['epoch'].max()
-            # initial_epoch += additional_values['epoch']
+            csv_log = pd.read_csv(os.path.join(logdir, 'epoch_loss.csv'))
+            initial_epoch = (csv_log['epoch'].max() + 1) if csv_log['phase'].tail(1).values[0] == 'valid' \
+                else csv_log['epoch'].max()
+            current_batch = 0 if csv_log['phase'].tail(1).values[0] == 'valid' \
+                else csv_log['batch'].tail(1).values[0]
+            current_phase = 'valid' if current_batch == len(dataloaders['train']) else 'train'
         except KeyError as err:
             # Old saved model does not have epoch as additional values
             epoch_loss_csv = os.path.join(logdir, 'epoch_loss.csv')
@@ -197,8 +205,16 @@ running_loss = 0.0
 running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
+    # Only for data augmentation training
+    # Re-sampling the dataset, test set will remain the same
+    _, dataloaders = dataset_sampling(dataset, opt, collate_data)
     for phase in ['train', 'valid']:
-        nbatch_loss, nbatch_acc, tlength = 0, 0, len(dataloaders[phase])
+        # Skip training phase one time if current phase is supposed to be valid
+        if current_batch != 0 and current_phase == 'valid':
+            current_batch = 0
+            continue
+        current_phase = phase
+        batch_losses, batch_accs, dataloader_len = 0, 0, len(dataloaders[phase])
         # if initial_epoch % opt.eval_every_train != 0:
         if phase == 'train':
             model.train()
@@ -209,29 +225,35 @@ while initial_epoch <= opt.epoch:
         # Progress bar
         data = tqdm(dataloaders[phase], desc="Loss: ", total=len(dataloaders[phase]), ncols=80)
         for i, (inputs, labels) in enumerate(data):
+            # current_batch is useful only when resuming
+            if current_batch+i == dataloader_len:
+                break
             inputs = inputs.to(device)
             labels = labels.to(device)
             optimizer.zero_grad()
             batch_loss, batch_acc, running_loss, running_accuracy = metric_util.compute_metric(
-                model, phase, inputs, labels, criterion, optimizer, i+1
+                model, phase, inputs, labels, criterion, optimizer, lr_scheduler, i+1
             )
-            nbatch_loss += batch_loss
-            nbatch_acc += batch_acc
-            lr_scheduler.step()
+            batch_losses += batch_loss
+            batch_accs += batch_acc
             # updating progress bar
             data.set_description("{} {}/{}: Loss: {:.6f}, Acc: {:.6f}".format(
                 phase, initial_epoch, opt.epoch, running_loss, running_accuracy))
             # save checkpoint every 10000 batches
             # Save every 10000 cumulative batch loss into .csv file
-            if i % 10000 == 9999:
-                tlength -= 10000
-                csv_logger.save([phase, initial_epoch, i+1, running_loss, running_accuracy,
-                                 nbatch_loss / 10000, nbatch_acc / 10000])
-                nbatch_loss, nbatch_acc = 0, 0
+            if (current_batch+i+1) % opt.log_batch == 0:
+                csv_logger.save([phase, initial_epoch, current_batch+i+1, running_loss, running_accuracy,
+                                 batch_losses / opt.log_batch, batch_accs / opt.log_batch])
+                batch_losses, batch_accs = 0, 0
                 # save most recent model as checkpoint
                 checkpoint = copy.deepcopy(model.state_dict())
                 model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
                                              additional_values={'epoch': initial_epoch})
+            del inputs, labels
+        if dataloader_len % opt.log_batch != 0:
+            csv_logger.save([phase, initial_epoch, dataloader_len, running_loss, running_accuracy,
+                             batch_losses / (dataloader_len % opt.log_batch),
+                             batch_accs / (dataloader_len % opt.log_batch)])
         # Save best model if exist
         if phase == 'valid' and running_accuracy > best_accuracy:
             best_accuracy = running_accuracy
@@ -242,11 +264,9 @@ while initial_epoch <= opt.epoch:
         if phase == 'valid':
             metric_logger.save_metric(metric_util.pred, metric_util.gt, initial_epoch)
         # save most recent model as checkpoint
-        assert tlength > 0 & tlength < 10000
-        csv_logger.save([phase, initial_epoch, -1, running_loss, running_accuracy,
-                         nbatch_loss / tlength, nbatch_acc / tlength])
         checkpoint = copy.deepcopy(model.state_dict())
         model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
                                      additional_values={'epoch': initial_epoch})
+        current_batch = 0
     initial_epoch += 1
 print("Best validation accuracy: {:.6f}".format(best_accuracy))
