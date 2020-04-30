@@ -1,3 +1,4 @@
+import torch
 from torchvision import transforms
 
 
@@ -43,3 +44,31 @@ class Transformer:
         out = self.totensor(out)
 
         return out
+
+
+def dataset_sampling(dataset, opt, collate_data):
+
+    dataset['train'].sampling()
+    dataset['valid'].sampling()
+
+    dataloaders = {
+        'train': torch.utils.data.DataLoader(
+            dataset['train'],
+            batch_size=opt.batch_size,
+            shuffle=True,
+            num_workers=opt.workers,
+            pin_memory=True,
+            drop_last=True,
+            collate_fn=collate_data,
+        ),
+        'valid': torch.utils.data.DataLoader(
+            dataset['valid'],
+            batch_size=opt.batch_size,
+            num_workers=opt.workers,
+            pin_memory=True,
+            drop_last=True,
+            shuffle=False,
+            collate_fn=collate_data,
+        ),
+    }
+    return dataset, dataloaders
