@@ -117,28 +117,10 @@ dataset = {
     'train': Dataset(opt, mode='train'),
     'valid': Dataset(opt, mode='valid')
 }
-# only for data augmentation training
+
+print(str_verbose, "Trained with augmented dataset: {}".format(opt.augmented))
 dataset, dataloaders = dataset_sampling(dataset, opt, collate_data)
-# dataloaders = {
-#    'train': torch.utils.data.DataLoader(
-#        dataset['train'],
-#        batch_size=opt.batch_size,
-#        shuffle=True,
-#        num_workers=opt.workers,
-#        pin_memory=True,
-#        drop_last=True,
-#        collate_fn=collate_data,
-#    ),
-#    'valid': torch.utils.data.DataLoader(
-#        dataset['valid'],
-#        batch_size=opt.batch_size,
-#        num_workers=opt.workers,
-#        pin_memory=True,
-#        drop_last=True,
-#        shuffle=False,
-#        collate_fn=collate_data,
-#    ),
-# }
+
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
       (time.time() - start_time))
 print(str_verbose, "# training points: " + str(len(dataset['train'])))
@@ -205,9 +187,9 @@ running_loss = 0.0
 running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
-    # Only for data augmentation training
     # Re-sampling the dataset, test set will remain the same
-    _, dataloaders = dataset_sampling(dataset, opt, collate_data)
+    if opt.augmented:
+        _, dataloaders = dataset_sampling(dataset, opt, collate_data)
     for phase in ['train', 'valid']:
         # Skip training phase one time if current phase is supposed to be valid
         if current_batch != 0 and current_phase == 'valid':

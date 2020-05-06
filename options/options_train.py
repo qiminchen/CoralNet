@@ -20,7 +20,8 @@ def add_general_arguments(parser):
 
     # Dataset IO
     parser.add_argument('--dataset', type=str, default=None, help='dataset to use')
-    parser.add_argument('--source', type=str, default=None, help='which source to use for feature extraction')
+    parser.add_argument('--source', type=str, default=None,
+                        help='which source to use for feature extraction or network training')
     parser.add_argument('--workers', type=int, default=4, help='number of data loading workers')
     parser.add_argument('--batch_size', type=int, default=16, help='training batch size')
     parser.add_argument('--epoch_batches', default=None, type=int, help='number of batches used per epoch')
@@ -28,6 +29,7 @@ def add_general_arguments(parser):
                         type=int, help='max number of batches used for evaluation per epoch')
     parser.add_argument('--log_time', action='store_true', help='adding time log')
     parser.add_argument('--input_size', type=int, default=224, help='image size, 224x224 or 168x168')
+    parser.add_argument('--augmented', type=int, default=0, help='augmented dataset or not')
 
     # Network name
     parser.add_argument('--net', type=str, required=True, default='efficientnet', help='network type to use')
@@ -59,7 +61,7 @@ def add_general_arguments(parser):
     # Logging and visualization
     parser.add_argument('--logdir', type=str, default=None,
                         help='Root directory for logging. Actual dir is [logdir]/[net_classes_dataset]/[expr_id]')
-    parser.add_argument('--log_batch', action='store_true', help='Log batch loss')
+    parser.add_argument('--log_batch', type=int, default=10000, help='Log batch loss')
     parser.add_argument('--expr_id', type=int, default=0,
                         help='Experiment index. non-positive ones are overwritten by default. Use 0 for code test. ')
     parser.add_argument('--save_net', type=int, default=1, help='Period of saving network weights')
