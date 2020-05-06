@@ -70,7 +70,7 @@ For 1 8GB RAM CPU and 1 1080ti GPU, the maximum batch size with input size of 22
 
 | Network |    CPU   |      GPU     | Batch size | Workers |  Training time |
 | :-----: | :------: | :----------: |  :----: | :--------:  | :----: |
-|  VGG16  |  1 - 8G  |  2 - 1080ti  |    96   |     18      |  --   |
+|  VGG16  |  3 - 64G  |  2 - 1080ti  |    144   |     36      |  ~ 19 hrs/epoch   |
 |  ResNet50  |  3 - 64G  |  2 - 1080ti  |   196    |   108    |  ~ 19 hrs/epoch   |
 |  ResNet101  |  3 - 64G  |  2 - 1080ti  |   156    |  108     |  ~ 24 hrs/epoch  |
 |  EfficientNetb0 - 1280  |  3 - 64G  |  2 - 1080ti  |   156    |   128    |  ~ 18 hrs/epoch |
