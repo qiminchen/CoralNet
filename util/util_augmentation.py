@@ -48,8 +48,9 @@ class Transformer:
 
 def dataset_sampling(dataset, opt, collate_data):
 
-    dataset['train'].sampling()
-    dataset['valid'].sampling()
+    if opt.augmented:
+        dataset['train'].sampling()
+        dataset['valid'].sampling()
 
     dataloaders = {
         'train': torch.utils.data.DataLoader(
