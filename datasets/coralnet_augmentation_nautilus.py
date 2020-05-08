@@ -1,6 +1,4 @@
-import os
 import json
-import torch
 import boto3
 import random
 import torch.utils.data as data
@@ -16,17 +14,13 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 class Dataset(data.Dataset):
 
     @classmethod
-    def get_k(cls, num, rarity):
-        if rarity >= 100000:
-            return min(num, 100000)
-        if 50000 <= rarity <= 100000:
-            return num
-        bounds = [12500, 14285, 16666, 20000, 25000, 33333, 50000]
+    def get_k(cls, rarity):
+        bounds = [12500, 14285, 16666, 20000, 25000, 33333, 50000, 100000]
         ratio = 8
         for idx, (lower, upper) in enumerate(zip(bounds[:-1], bounds[1:]), 1):
             if lower <= rarity < upper:
                 ratio = 8 - idx
-        return int(num * ratio / 8)
+        return ratio
 
     def __init__(self, opt, mode='train'):
         assert mode in ['train', 'valid']
@@ -36,46 +30,63 @@ class Dataset(data.Dataset):
         s3 = boto3.resource('s3', endpoint_url="https://s3.nautilus.optiputer.net")
         bucket = s3.Bucket('qic003')
 
-        img_bucket = bucket.Object('status/beta_status/images_all_ga.json')
+        img_bucket = bucket.Object('status/gamma_status/1275/images_all.txt')
         images_list = img_bucket.get()['Body'].read().decode('utf-8')
-        self.images_list = json.loads(images_list)
+        images_list = images_list.split('\n')
 
-        is_train_bucket = bucket.Object('status/beta_status/is_train_ga.json')
+        is_train_bucket = bucket.Object('status/gamma_status/1275/is_train.txt')
         is_train = is_train_bucket.get()['Body'].read().decode('utf-8')
-        self.is_train = json.loads(is_train)
+        is_train = [x == 'True' for x in is_train.split('\n')]
 
-        labels_bucket = bucket.Object('status/beta_status/labels_mapping.json')
+        labels_bucket = bucket.Object('status/gamma_status/1275/labels_mapping.json')
         labels_map = labels_bucket.get()['Body'].read().decode('utf-8')
         self.labels_map = json.loads(labels_map)
 
-        rarity_bucket = bucket.Object('status/beta_status/labels_rarity.json')
+        rarity_bucket = bucket.Object('status/gamma_status/1275/labels_rarity.json')
         labels_rarity = rarity_bucket.get()['Body'].read().decode('utf-8')
         self.labels_rarity = json.loads(labels_rarity)
 
+        images_dict = {}
+        for i, img in enumerate(images_list):
+            label = img.split('/')[1]
+            item_in_split = ((self.mode == 'train') == is_train[i])
+            if item_in_split:
+                if label not in images_dict:
+                    images_dict[label] = [img]
+                else:
+                    images_dict[label] += [img]
+
         self.bucket = bucket
         self.transformer = Transformer()
+        self.images_dict = images_dict
+        self.ga_type = ['ga{}'.format(i) for i in range(1, 8)]
+
+        del images_list, is_train, images_dict
 
     def sampling(self):
-        self.samples = []
+
         # sub-sampling and super-sampling
-        target_list = []
-        for k, v in self.images_list.items():
+        self.samples = []
+        for l, v in self.images_dict.items():
+            target_list = []
             if self.mode == 'valid':
-                target_list += [i for i in v if self.is_train[i] == 'False']
+                target_list = [(i, 'ga0') for i in v]
             else:
-                tl = [i for i in v if self.is_train[i] == 'True']
-                target_list += random.sample(tl, k=self.get_k(len(tl), self.labels_rarity[k]))
+                if self.labels_rarity[l] >= 100000:
+                    target_list = [(i, 'ga0') for i in
+                                   random.sample(v, k=min(100000, len(v)))]
+                else:
+                    k = self.get_k(self.labels_rarity[l]) - 1
+                    assert 0 <= k <= 7
+                    for img in v:
+                        ga_type = ['ga0'] + random.sample(self.ga_type, k=k)
+                        target_list += [(img, ga) for ga in ga_type]
 
-        # example: "s1136/1397/i910611_s1136_1397_365_2556_ga7.jpg"
-        samples = []
-        for img in target_list:
-            samples.append({
-                'path': join('beta_cropped', img.split('_ga')[0] + '.jpg'),
-                'label': self.labels_map[img.split('/')[1]],
-                'ga_type': img.split('_')[-1].split('.')[0]
-            })
-
-        self.samples = samples
+            self.samples += [{
+                'path': join('beta_cropped', i),
+                'label': self.labels_map[l],
+                'ga_type': ga
+            } for i, ga in target_list]
 
     def __getitem__(self, idx):
         image = self.samples[idx]
