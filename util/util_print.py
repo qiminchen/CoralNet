@@ -26,7 +26,7 @@ str_warning = bcolors.WARNING + '[Warning]' + bcolors.ENDC
 str_error = bcolors.FAIL + '[Error]' + bcolors.ENDC
 
 
-with open('/home/qimin/Projects/CoralNet/data_analysis/label_set.json', 'r') as f:
+with open('/home/qimin/Projects/CoralNet/analysis/label_set.json', 'r') as f:
     all_labels = json.load(f)
 
 
@@ -39,7 +39,7 @@ def plot_refacc(filepath):
     plt.title(filepath.split('/')[-1])
     plt.grid(True, ls='--', lw=0.8)
     plt.tight_layout()
-    plt.savefig(os.path.join(filepath, 'loss.png'))
+    plt.savefig(os.path.join(filepath, 'refacc.png'))
 
 
 def get_class_name(classes):
@@ -80,7 +80,7 @@ def plot_cm(filename, save_path='/home/qimin/Downloads'):
     elif 20 <= len(cls) < 40:
         plt.figure(figsize=(20, 18))
     else:
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(12, 10))
     sn.set(font_scale=1)
     sn.heatmap(df_cm, annot=True, cmap="Greens", square=True,
                linewidths=0.1, annot_kws={"size": 10}, fmt='g')  # font size
@@ -135,7 +135,7 @@ def images_marking(net, source, image_name):
 
     # Mark gt and pred on each annotation in image
     d = ImageDraw.Draw(image)
-    fills = {'True': (255, 255, 0), 'False': (255, 255, 255)}
+    fills = {'True': (255, 255, 0), 'False': (255, 0, 0)}
     d.text((0, 0), "Accuracy: {}".format(acc), fill=fills['False'])
     for i, loc in enumerate(anno_loc):
         row = int(loc['row'][0])
@@ -144,3 +144,25 @@ def images_marking(net, source, image_name):
                fill=fills[str(est[i] == y[i])])
 
     image.save(os.path.join(cls_root, net, source, image_name + '.png'))
+
+
+def get_label_acc_across_sources(result_root):
+    sources = sorted(os.listdir(result_root))
+    results = {}
+    for s in sources:
+        output = np.load(os.path.join(result_root, s, 'output.npz'), allow_pickle=True)
+        gt = output['gt']
+        pred = output['pred']
+        # map the labels back to origin
+        cls = {v: k for k, v in output['cls_dict'].item().items()}
+        for g, p in zip(gt, pred):
+            if cls[g] not in results:
+                results[cls[g]] = [cls[p]]
+            else:
+                results[cls[g]] += [cls[p]]
+    acc_over_source = {}
+    for k, v in results.items():
+        acc = np.sum(np.array([k] * len(v)) == np.array(v)) / len(v)
+        acc_over_source[k] = acc
+
+    return acc_over_source
