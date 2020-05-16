@@ -76,7 +76,8 @@ def get_classification_report(source_path):
 def get_labels_classification_report(result_path):
     with open('/mnt/sda/coral/beta_status/1275/final_labels_meta.json', 'r') as fp:
         final_labels_meta = json.load(fp)
-    final_labels_meta = {i['id']: i['#_sources_present_in_training'] for i in final_labels_meta}
+    final_labels_meta = {i['id']: (i['#_sources_present_in_training'],
+                                   i['ann_count_in_training']) for i in final_labels_meta}
     skip_keys = ["accuracy", "macro avg", "weighted avg"]
     sources = os.listdir(result_path)
     labels_report = {}
@@ -102,18 +103,20 @@ def get_labels_classification_report(result_path):
     labels_metrics = []
     for k, v in labels_report.items():
         weighted = np.array(v['support']) / np.sum(v['support'])
-        tsp = final_labels_meta[int(k)] if int(k) in final_labels_meta else 0
+        tsp = final_labels_meta[int(k)][0] if int(k) in final_labels_meta else 0
+        ts = final_labels_meta[int(k)][1] if int(k) in final_labels_meta else 0
         labels_metrics.append({
             'id': k,
             'name': v['name'],
             'train-source-presented': tsp,
+            'train-support': ts,
             'test-source-presented': len(v['support']),
-            'support': np.sum(v['support']),
+            'test-support': np.sum(v['support']),
             'precision': np.sum(v['precision']*weighted),
             'recall': np.sum(v['recall']*weighted),
             'f1-score': np.sum(v['f1-score']*weighted)
         })
-    all_support = [i['support'] for i in labels_metrics]
+    all_support = [i['test-support'] for i in labels_metrics]
     all_precision = [i['precision'] for i in labels_metrics]
     all_recall = [i['recall'] for i in labels_metrics]
     all_f1 = [i['f1-score'] for i in labels_metrics]
@@ -122,8 +125,9 @@ def get_labels_classification_report(result_path):
         'id': '-',
         'name': '-',
         'train-source-presented': '-',
+        'train-support': '-',
         'test-source-presented': '-',
-        'support': np.sum(all_support),
+        'test-support': np.sum(all_support),
         'precision': np.sum(np.array(all_precision) * overall_weighted),
         'recall': np.sum(np.array(all_recall) * overall_weighted),
         'f1-score': np.sum(np.array(all_f1) * overall_weighted)
