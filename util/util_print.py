@@ -1,12 +1,18 @@
 import os
+import csv
 import json
 import pickle
 import numpy as np
 import seaborn as sn
 import pandas as pd
+import warnings
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve, auc, classification_report
+from sklearn.preprocessing import label_binarize
 from PIL import Image, ImageDraw
+from scipy import interp
+from itertools import cycle
+from sklearn.exceptions import UndefinedMetricWarning
 
 
 class bcolors:
@@ -26,7 +32,7 @@ str_warning = bcolors.WARNING + '[Warning]' + bcolors.ENDC
 str_error = bcolors.FAIL + '[Error]' + bcolors.ENDC
 
 
-with open('/home/qimin/Projects/CoralNet/analysis/label_set.json', 'r') as f:
+with open('/mnt/sda/coral/label_set.json', 'r') as f:
     all_labels = json.load(f)
 
 
@@ -50,6 +56,146 @@ def get_class_name(classes):
                 cls.append(ac['name'])
                 break
     return cls
+
+
+def get_classification_report(source_path):
+    warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
+    output = np.load(os.path.join(source_path, 'output.npz'), allow_pickle=True)
+    cls = {v: k for k, v in output['cls_dict'].item().items()}
+    labels = list(cls.keys())
+    labels_name = [i['name'] for l in output['cls'] for i in all_labels if i['id'] == l]
+    cls_report = classification_report(output['gt'], output['pred'], output_dict=True,
+                                       labels=labels, target_names=labels_name)
+    for idx, (k, v) in enumerate(cls_report.items()):
+        cls_report[k]['id'] = int(output['cls'][idx])
+        if idx == len(cls) - 1:
+            break
+    return cls_report
+
+
+def get_labels_classification_report(result_path):
+    with open('/mnt/sda/coral/beta_status/1275/final_labels_meta.json', 'r') as fp:
+        final_labels_meta = json.load(fp)
+    final_labels_meta = {i['id']: i['#_sources_present_in_training'] for i in final_labels_meta}
+    skip_keys = ["accuracy", "macro avg", "weighted avg"]
+    sources = os.listdir(result_path)
+    labels_report = {}
+    for s in sources:
+        with open(os.path.join(result_path, s, 'classification_report.json'), 'r') as fp:
+            cls_report = json.load(fp)
+        for k, v in cls_report.items():
+            if k not in skip_keys:
+                if v['id'] not in labels_report:
+                    labels_report[v['id']] = {
+                        'name': k,
+                        'precision': [v['precision']],
+                        'recall': [v['recall']],
+                        'f1-score': [v['f1-score']],
+                        'support': [v['support']]
+                    }
+                else:
+                    labels_report[v['id']]['precision'] += [v['precision']]
+                    labels_report[v['id']]['recall'] += [v['recall']]
+                    labels_report[v['id']]['f1-score'] += [v['f1-score']]
+                    labels_report[v['id']]['support'] += [v['support']]
+
+    labels_metrics = []
+    for k, v in labels_report.items():
+        weighted = np.array(v['support']) / np.sum(v['support'])
+        tsp = final_labels_meta[int(k)] if int(k) in final_labels_meta else 0
+        labels_metrics.append({
+            'id': k,
+            'name': v['name'],
+            'train-source-presented': tsp,
+            'test-source-presented': len(v['support']),
+            'support': np.sum(v['support']),
+            'precision': np.sum(v['precision']*weighted),
+            'recall': np.sum(v['recall']*weighted),
+            'f1-score': np.sum(v['f1-score']*weighted)
+        })
+    all_support = [i['support'] for i in labels_metrics]
+    all_precision = [i['precision'] for i in labels_metrics]
+    all_recall = [i['recall'] for i in labels_metrics]
+    all_f1 = [i['f1-score'] for i in labels_metrics]
+    overall_weighted = np.array(all_support) / np.sum(all_support)
+    labels_metrics.append({
+        'id': '-',
+        'name': '-',
+        'train-source-presented': '-',
+        'test-source-presented': '-',
+        'support': np.sum(all_support),
+        'precision': np.sum(np.array(all_precision) * overall_weighted),
+        'recall': np.sum(np.array(all_recall) * overall_weighted),
+        'f1-score': np.sum(np.array(all_f1) * overall_weighted)
+    })
+
+    keys = labels_metrics[0].keys()
+    with open(os.path.join(result_path, 'labels_classification_report.csv'), 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(labels_metrics)
+
+
+def plot_roc(source_path):
+    output = np.load(os.path.join(source_path, 'output.npz'), allow_pickle=True)
+    cls = {v: k for k, v in output['cls_dict'].item().items()}
+    binarized_gt = label_binarize([cls[i] for i in output['gt']],
+                                  classes=output['cls'])
+    binarized_pred = label_binarize([cls[i] for i in output['pred']],
+                                    classes=output['cls'])
+
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(len(cls)):
+        fpr[i], tpr[i], _ = roc_curve(binarized_gt[:, i], binarized_pred[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # Compute micro-average ROC curve and ROC area
+    fpr["micro"], tpr["micro"], _ = roc_curve(binarized_gt.ravel(), binarized_pred.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(len(cls))]))
+
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(len(cls)):
+        mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+
+    # Finally average it and compute AUC
+    mean_tpr /= len(cls)
+
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+
+    # Plot all ROC curves
+    plt.figure(figsize=(15, 10))
+    plt.plot(fpr["micro"], tpr["micro"],
+             label='micro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["micro"]),
+             color='deeppink', linestyle=':', linewidth=4)
+
+    plt.plot(fpr["macro"], tpr["macro"],
+             label='macro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["macro"]),
+             color='navy', linestyle=':', linewidth=4)
+
+    colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
+    for i, color in zip(range(len(cls)), colors):
+        plt.plot(fpr[i], tpr[i], color=color, lw=lw,
+                 label='ROC curve of class {0} (area = {1:0.2f})'
+                       ''.format(i, roc_auc[i]))
+
+    plt.plot([0, 1], [0, 1], 'k--', lw=lw)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.01])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic to multi-class')
+    plt.legend(loc="lower right")
+    plt.show()
 
 
 def plot_cm(filename, save_path='/home/qimin/Downloads'):
@@ -144,25 +290,3 @@ def images_marking(net, source, image_name):
                fill=fills[str(est[i] == y[i])])
 
     image.save(os.path.join(cls_root, net, source, image_name + '.png'))
-
-
-def get_label_acc_across_sources(result_root):
-    sources = sorted(os.listdir(result_root))
-    results = {}
-    for s in sources:
-        output = np.load(os.path.join(result_root, s, 'output.npz'), allow_pickle=True)
-        gt = output['gt']
-        pred = output['pred']
-        # map the labels back to origin
-        cls = {v: k for k, v in output['cls_dict'].item().items()}
-        for g, p in zip(gt, pred):
-            if cls[g] not in results:
-                results[cls[g]] = [cls[p]]
-            else:
-                results[cls[g]] += [cls[p]]
-    acc_over_source = {}
-    for k, v in results.items():
-        acc = np.sum(np.array([k] * len(v)) == np.array(v)) / len(v)
-        acc_over_source[k] = acc
-
-    return acc_over_source
