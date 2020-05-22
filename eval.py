@@ -6,9 +6,10 @@ import random
 import argparse
 import numpy as np
 import pickle
+import pandas as pd
 from sklearn.linear_model import SGDClassifier
 from sklearn.calibration import CalibratedClassifierCV
-from util.util_print import str_stage, plot_cm, plot_refacc, images_marking
+from util.util_print import str_stage, plot_cm, plot_refacc, get_classification_report
 
 
 parser = argparse.ArgumentParser(description='Train Logistic Regression classifier')
@@ -16,29 +17,41 @@ parser.add_argument('source', type=str, help='Source to be evaluated')
 parser.add_argument('--data_root', type=str, help='Path to the data root')
 parser.add_argument('--epochs', type=int, help='Number of epoch for training')
 parser.add_argument('--outdir', type=str, help='Output directory')
+parser.add_argument('--loss', type=str, help='The loss function to be used'
+                                             'hinge gives a linear SVM, log gives a logistic regression')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
 
 
-def train_classifier(source, epoch, data_root):
+def train_classifier(source, epoch, data_root, loss):
     """
     Main function to train and evaluate the classifier
     :param source: source to be evaluated
     :param epoch: number of epoch for training
     :param data_root: data root directory
+    :param loss: the loss function to be used
     :return: gt, pred, classes, classes_dict, clf, stat
     """
     print(str_stage, "Setting up for {}".format(data_root.split('/')[-1]))
 
     # Read features list and is_train list
     #
-    train_list, ref_list, test_list = _get_lists(source, data_root)
+    # train_list, ref_list, test_list = _get_lists(source, data_root)
+    with open(os.path.join('/mnt/sda/features/status', source, 'train_list.txt'), 'r') as file:
+        line = file.read()
+    train_list = line.split('\n')
+    with open(os.path.join('/mnt/sda/features/status', source, 'ref_list.txt'), 'r') as file:
+        line = file.read()
+    ref_list = line.split('\n')
+    with open(os.path.join('/mnt/sda/features/status', source, 'test_list.txt'), 'r') as file:
+        line = file.read()
+    test_list = line.split('\n')
 
     # Identify classes common to both train and test. This will be our labelset for the training.
     #
     classes = _get_classes(source, train_list, ref_list, test_list, data_root)
-    with open(os.path.join('/mnt/sda/coral_v2/backend_status', source, 'labels.json'), 'r') as f:
+    with open(os.path.join('/mnt/sda/features/status', source, 'labels.json'), 'r') as f:
         backend_classes = json.load(f)
     classes = list(set(backend_classes).intersection(classes))
     classes_dict = {classes[i]: i for i in range(len(classes))}
@@ -46,7 +59,8 @@ def train_classifier(source, epoch, data_root):
     # Train a classifier
     #
     start_time = time.time()
-    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes, classes_dict, data_root)
+    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch,
+                                   classes, classes_dict, data_root, loss)
     if not ok:
         return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     runtime = time.time() - start_time
@@ -54,12 +68,12 @@ def train_classifier(source, epoch, data_root):
     # Evaluate trained classifier
     #
     gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root)
-    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': valacc}
+    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': np.mean(valacc)}
 
     return gt, pred, classes, classes_dict, clf, stat
 
 
-def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, data_root):
+def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, data_root, loss):
     """
     Function to train and calibrate the classifier
     :param source: source to be evaluated
@@ -73,7 +87,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, da
     """
 
     # Figure out # images per mini-batch and batches per epoch.
-    batch_size = min(len(train_list), 500)
+    batch_size = min(len(train_list), 300)
     n = int(np.ceil(len(train_list) / float(batch_size)))
     unique_class = list(range(len(classes)))
     print(str_stage, "Start training {} with {} epochs: number of images: {}, number of batch: {}, classes: {}".format(
@@ -83,7 +97,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, da
     x_ref, y_ref = _load_mini_batch(source, ref_list, classes, classes_dict, data_root)
 
     # Initialize classifier and refset accuracy list
-    clf = SGDClassifier(loss='log', average=True)
+    clf = SGDClassifier(loss=loss, average=True)
     refacc = []
     for epoch in range(epochs):
         random.shuffle(train_list)
@@ -97,7 +111,7 @@ def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, da
     clf_calibrated = CalibratedClassifierCV(clf, cv='prefit')
     clf_calibrated.fit(x_ref, y_ref)
 
-    return True, clf, refacc
+    return True, clf_calibrated, refacc
 
 
 def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root):
@@ -152,9 +166,9 @@ def _load_data(source, img, classes, data_root):
     :return: loaded features and labels
     """
 
-    with open(os.path.join(data_root, source, 'images', img + '.features.json'), 'r') as f:
+    with open(os.path.join(data_root, source, img + '.features.json'), 'r') as f:
         x = json.load(f)
-    y = list(np.load(os.path.join(data_root, source, 'images', img + '.features.anns.npy')))
+    y = list(np.load(os.path.join(data_root, source, img + '.features.anns.npy')))
 
     # Remove samples for which the label is not in classes
     # Check if list of tuple is empty of not
@@ -200,7 +214,7 @@ def _get_classes(source, train_list, ref_list, test_list, data_root):
     def read(lst):
         lst_classes = []
         for l in lst:
-            npy = os.path.join(data_root, source, 'images', l + '.features.anns.npy')
+            npy = os.path.join(data_root, source, l + '.features.anns.npy')
             arr = list(np.load(npy))
             lst_classes += arr
         return lst_classes
@@ -221,12 +235,12 @@ def _get_lists(source, data_root):
     :return: training set and testing set filename lists
     """
 
-    with open(os.path.join('/mnt/sda/coral_v2/backend_status', source, 'images_all.txt'), 'r') as file:
+    with open(os.path.join('/mnt/sda/features/status', source, 'images_all.txt'), 'r') as file:
         line = file.read()
     file.close()
     images_list = line.split('\n')
 
-    with open(os.path.join('/mnt/sda/coral_v2/backend_status', source, 'is_train.txt'), 'r') as file:
+    with open(os.path.join('/mnt/sda/features/status', source, 'is_train.txt'), 'r') as file:
         line = file.read()
     file.close()
     is_train = [x == 'True' for x in line.split('\n')]
@@ -266,7 +280,7 @@ def _acc(gts, preds):
 
 # gt, pred, cls, status = train_classifier(args.source, args.epochs)
 try:
-    gt, pred, cls, cls_dict, clf, status = train_classifier(args.source, args.epochs, args.data_root)
+    gt, pred, cls, cls_dict, clf, status = train_classifier(args.source, args.epochs, args.data_root, args.loss)
 except Exception as e:
     gt, pred, cls, cls_dict, clf, status = 0, 0, 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     print("Failed to train source: {}, {}".format(args.source, e))
@@ -290,3 +304,10 @@ print('{} training completed!'.format(args.source))
 plot_refacc(save_dir)
 # Plot confusion matrix
 plot_cm(filename=os.path.join(save_dir, 'output.npz'), save_path=save_dir)
+# Export classification report to .json
+cls_report = get_classification_report(save_dir)
+with open(os.path.join(save_dir, 'classification_report.json'), 'w') as f:
+    json.dump(cls_report, f, indent=2)
+# Export classification report to .csv
+cls_report_pd = pd.read_json(os.path.join(save_dir, 'classification_report.json')).T
+cls_report_pd.to_csv(os.path.join(save_dir, 'classification_report.csv'))
