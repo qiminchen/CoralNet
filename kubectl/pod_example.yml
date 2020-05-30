@@ -12,19 +12,14 @@ spec:
             operator: In
             values:
             - 1080Ti
-            - 2080Ti
-            - V100
-            - titan-xp
+#            - 2080Ti
+#            - V100
+#            - titan-xp
+  restartPolicy: Never
   containers:
   - name: gpu-container
-    # securityContext:
-    #   privileged: true
-    #   capabilities:
-    #     add:
-    #       - SYS_ADMIN
-    #image: gitlab-registry.nautilus.optiputer.net/wex041/lab:maskrcnn-benchmark
     # Use image from DockerHub as below since it is more stable.
-    image: xwjabc/lab:maskrcnn-benchmark
+    image: liam951120/coralnet:latest
     args: ["sleep", "infinity"]
     volumeMounts:
     - mountPath: /qic003
@@ -37,8 +32,7 @@ spec:
         nvidia.com/gpu: 1
       requests:
         memory: 8Gi
-
-  restartPolicy: Never
+        nvidia.com/gpu: 1
   volumes:
     - name: qic003
       persistentVolumeClaim:

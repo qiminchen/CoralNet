@@ -1,28 +1,27 @@
-import torch
-import numpy as np
+import os
+import json
 
 
-class Feature(object):
-    def __init__(self):
-        raise NotImplementedError
+def train_test_split(source, save_path, root_path='/mnt/sda/coral_v2'):
+    """
+    This function is used to generate the same train/test split as current backend
+    :param source: source to be used for train/test splitting
+    :param save_path: path to save the images list and train/test list
+    :param root_path: root path to the coralnet_v2 dataset
+    :return: images list and train/test list
+    """
+    all_list = os.listdir(os.path.join(root_path, source, 'images'))
+    images_all = list(sorted([al.split('.')[0] for al in all_list if al.endswith('.jpg')]))
 
-    def __str__(self):
-        raise NotImplementedError
+    is_train = []
+    for img in images_all:
+        with open(os.path.join(root_path, source, 'images', img + '.meta.json'), 'r') as f:
+            meta = json.load(f)
+        is_train.append('True') if meta['in_trainset'] else is_train.append('False')
 
-
-class ExtractFeature(Feature):
-    # Load pre-trained model
-    def __init__(self, model):
-        super().__init__()
-        self.model = model
-        self.features = []
-        self.labels = []
-        self.model.eval()
-
-    def __str__(self):
-        print(self.model.__class__.__name__)
-
-    def extract(self, inputs, labels):
-        features = self.model.extract_features(inputs)
-        self.features += list(features.cpu().numpy())
-        self.labels += list(labels.cpu().numpy())
+    # save images_all as images_all.txt
+    with open(os.path.join(save_path, source, 'images_all.txt'), 'w') as f:
+        f.write('\n'.join(images_all))
+    # save is_train as is_train.txt
+    with open(os.path.join(save_path, source, 'is_train.txt'), 'w') as f:
+        f.write('\n'.join(is_train))

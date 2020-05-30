@@ -32,13 +32,74 @@ k exec -it pod_name_in_this_job(qic003-job-zprb4) bash  # launch pod
 k delete job job_name(qic003-jod)       # delete pod, remember to delete job once training is finished
 ```
 
-## Docker image
+## Environment setup
 
-Clone thie repo to target directory: `git clone https://github.com/qiminchen/CoralNet.git` \
-Create conda environment coralnet: `conda env create -f environment.yml` \
-Export conda environment coralnet: `conda env export > environment.yml`
+Export conda environment coralnet: `conda env export > environment.yml  # only export once or environment changed`
+1. Create a Job on kubectl with computing resources
+2. Clone thie repo to target directory: `git clone https://github.com/qiminchen/CoralNet.git`
+3. Create conda environment coralnet: `conda env create -f environment.yml`
+4. Configure AWS: 
+```
+NOTE: Do NOT recommend installing the awscli awscli-plugin-endpoint in local environment, instead 
+      install the awscli awscli-plugin-endpoint in conda environment
+
+pip install awscli awscli-plugin-endpoint
+aws configure set plugins.endpoint awscli_plugin_endpoint
+
+vim ~/.aws/credentials
+
+# Add profile to ~/.aws/credentials
+[default]
+aws_access_key_id = xxx
+aws_secret_access_key = xxx
+
+# Add profile to ~/.aws/config
+aws configure set s3api.endpoint_url https://s3.nautilus.optiputer.net
+aws configure set s3.endpoint_url https://s3.nautilus.optiputer.net
+
+aws s3 ls s3://qic003/ --profile prp   # List dir to test s3 connection
+
+# Sync repository from s3
+aws s3 sync s3://qic003/CoralNet ./qic003
+
+```
+
+## GPU / CPU Utilization
+
+For 1 8GB RAM CPU and 1 1080ti GPU, the maximum batch size with input size of 224x224 that fills up GPU memory and and the minimum number of workers of dataloader that ensure >90% GPU utilization.
+
+| Network |    CPU   |      GPU     | Batch size | Workers |  Training time |
+| :-----: | :------: | :----------: |  :----: | :--------:  | :----: |
+|  VGG16  |  3 - 64G  |  2 - 1080ti  |    144   |     36      |  ~ 19 hrs/epoch   |
+|  ResNet50  |  3 - 64G  |  2 - 1080ti  |   196    |   108    |  ~ 19 hrs/epoch   |
+|  ResNet101  |  3 - 64G  |  2 - 1080ti  |   156    |  108     |  ~ 24 hrs/epoch  |
+|  EfficientNetb0 - 1280  |  3 - 64G  |  2 - 1080ti  |   156    |   128    |  ~ 18 hrs/epoch |
+|  EfficientNetb0 - 2048  |  3 - 64G  |  2 - 1080ti  |   156    |   128    |  ~ 24 hrs/epoch |
+|  EfficientNetb0 - 4096  |  3 - 64G  |  2 - 1080ti  |   156    |   128    |  ~ 26 hrs/epoch |
 
 # CoralNet
+
+## Train models
+
+```
+cd ../CoralNet/
+./scripts/train.sh --net resnet --net_version "resnet50" --nclasses 1279 --max_lr 0.1 --batch_size 64 --workers 24 --epoch 10 --logdir /path/to/log
+```
+
+## Extract features
+
+```
+cd ../CoralNet/
+./scripts/extract.sh --net resnet --net_version "resnet50" --net_path /path/to/well/trained/model --source "sxxx" --logdir /path/to/save/features/dir
+```
+
+## Train Logistic Regression classifier
+
+NOTE that `outdir` in `extract_features.py` has to be the same as `data_root` in `eval_local.py` for evaluating the new CoralNet purpose.
+```
+cd ../CoralNet/
+./scripts/eval.sh
+```
 
 ## Data
 

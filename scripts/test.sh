@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
-net_path=/mnt/cube/qic003/coral/output/efficientnet/efficientnet_b0_mooreanet_0.001/0/best.pt
+net_path=/home/qimin/Downloads/evaluation/models/224/resnet101_5eps_best.pt
 
 set -e
 
 python test.py \
     --net efficientnet \
-    --net_version "b0" \
-    --dataset coralnet \
-    --sets "source" \
-    --nclasses 9 \
-    --batch_size 32 \
-    --workers 4 \
+    --net_version b4 \
+    --pretrained \
+    --dataset coralnet_extraction \
+    --input_size 224 \
+    --source "s294" \
+    --nclasses 1279 \
+    --gpu 0 \
+    --batch_size 1 \
+    --workers 0 \
     --net_path "$net_path" \
     $*

@@ -38,7 +38,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
 
 # Install basics
 RUN apt-get update -y \
- && apt-get install -y apt-utils git curl ca-certificates bzip2 cmake tree htop bmon iotop g++ \
+ && apt-get install -y apt-utils git vim curl ca-certificates bzip2 cmake tree htop bmon iotop g++ \
  && apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev
 
 # Install Miniconda
@@ -59,7 +59,7 @@ ENV CONDA_PREFIX=/miniconda/envs/$CONDA_DEFAULT_ENV
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV CONDA_AUTO_UPDATE_CONDA=false
 
-# Install vscode debugger (ptvsd)
+# Install vscode debugger (ptvsd), aws and aws-plugin
 RUN pip install ptvsd
 
 # Set up the timezone
@@ -68,6 +68,22 @@ ENV TZ=America/Los_Angeles
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install wget, nano and tmux
-RUN apt install -y wget nano tmux
+RUN apt install -y wget nano tmux unzip
 
-WORKDIR /
+SHELL ["/bin/bash", "-c"]
+
+# Clone git repository
+# https://stackoverflow.com/questions/19643946/dockerfile-for-cloning-private-git-repo
+ARG git_personal_token
+RUN git clone https://${git_personal_token}@github.com/qiminchen/CoralNet.git \
+ && mkdir ~/.aws \
+ && cd CoralNet \
+ && cp credentials ~/.aws/credentials \
+ && conda env create -f environment.yml \
+ && source ../miniconda/etc/profile.d/conda.sh \
+ && conda activate coralnet \
+ && aws configure set plugins.endpoint awscli_plugin_endpoint \
+ && aws configure set s3api.endpoint_url https://s3.nautilus.optiputer.net \
+ && aws configure set s3.endpoint_url https://s3.nautilus.optiputer.net
+
+WORKDIR /CoralNet

@@ -2,15 +2,18 @@
 
 import sys
 import os
+import gc
 import time
+import json
 import torch
 import models
 import datasets
+import numpy as np
+import torch.nn as nn
 from tqdm import tqdm
-import loggers.loggers as logger
 from options import option_extract
-from util.util_extract import ExtractFeature
-from util.util_print import str_stage, str_verbose, str_warning
+from collections import OrderedDict
+from util.util_print import str_stage, str_verbose
 
 ###################################################
 
@@ -32,90 +35,74 @@ else:
 
 ###################################################
 
-print(str_stage, "Setting up saving directory")
-exprdir = '{}_{}_{}'.format(opt.net, opt.net_version, opt.source)
-logdir = os.path.join(opt.logdir, exprdir)
-if os.path.isdir(logdir):
-    print(
-        str_warning, (
-            "Will remove Experiment at\n\t%s\n"
-            "Do you want to continue? (y/n)"
-        ) % logdir
-    )
-    need_input = True
-    while need_input:
-        response = input().lower()
-        if response in ('y', 'n'):
-            need_input = False
-    if response == 'n':
-        print(str_stage, "User decides to quit")
-        sys.exit()
-    os.system('rm -rf ' + logdir)
-os.system('mkdir -p ' + logdir)
-assert os.path.isdir(logdir)
-print(str_verbose, "Saving directory set to: %s" % logdir)
-
-###################################################
-
-print(str_stage, "Setting up feature loggers")
-feature_logger = logger.FeatureLogger(logdir)
-
-###################################################
-
-print(str_stage, "Setting up models")
+print(str_stage, "Setting up models: {}, image size: {}".format(opt.logdir.split('/')[-1], opt.input_size))
 model = models.get_model(opt)
 state_dicts = torch.load(opt.net_path, map_location=device)
-model.load_state_dict(state_dicts['net'])
+# original saved file with DataParallel
+# create new OrderedDict that does not contain `module`.
+# ref: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+new_state_dicts = OrderedDict()
+for k, v in state_dicts['net'].items():
+    name = k[7:]
+    # name = k.replace(".module", "")
+    new_state_dicts[name] = v
+model.load_state_dict(new_state_dicts)
 for param in model.parameters():
     param.requires_grad = False
 print("# model parameters: {:,d}".format(
     sum(p.numel() for p in model.parameters() if p.requires_grad)))
+# remove _fc layer
+if opt.net == 'resnet':
+    model = nn.Sequential(*list(model.children())[:-1])
+elif opt.net == 'vgg':
+    model.classifier = nn.Sequential(*list(model.classifier.children())[:-1])
 model = model.to(device)
-extractor = ExtractFeature(model)
-# Use model.extract_features(input) to extract features
 
 ###################################################
 
-print(str_stage, "Setting up data loaders")
+print(str_stage, "Setting up data loaders for source: {}".format(opt.source))
 start_time = time.time()
 Dataset = datasets.get_dataset(opt.dataset)
-dataset = {
-    'train': Dataset(opt, mode='train'),
-    'valid': Dataset(opt, mode='valid')
-}
-dataloaders = {
-    'train': torch.utils.data.DataLoader(
-        dataset['train'],
+dataset = Dataset(opt, local=True)
+dataloaders = torch.utils.data.DataLoader(
+        dataset,
         batch_size=opt.batch_size,
-        shuffle=True,
+        shuffle=False,
         num_workers=opt.workers,
         pin_memory=True,
-        drop_last=True
-    ),
-    'valid': torch.utils.data.DataLoader(
-        dataset['valid'],
-        batch_size=opt.batch_size,
-        num_workers=opt.workers,
-        pin_memory=True,
-        drop_last=True,
-        shuffle=False
-    ),
-}
+        drop_last=False
+    )
 print(str_verbose, "Time spent in data IO initialization: %.2fs" %
       (time.time() - start_time))
-print(str_verbose, "# training points: " + str(len(dataset['train'])))
-print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
-print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
+print(str_verbose, "# extracting points: " + str(len(dataset)))
+print(str_verbose, "# extracting batches in total: " + str(len(dataloaders)))
 
 ###################################################
 
 print(str_stage, "Start extracting features")
-for phase in ['train', 'valid']:
-    data = tqdm(dataloaders[phase], total=len(dataloaders[phase]), ncols=120)
-    for inputs, labels in data:
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-        with torch.no_grad():
-            extractor.extract(inputs, labels)
-    feature_logger.save_feature(extractor.features, extractor.labels, phase)
+data = tqdm(dataloaders, total=len(dataloaders), ncols=80)
+model.eval()
+save_dir = os.path.join(opt.logdir, opt.source, 'images')
+if not os.path.isdir(save_dir):
+    os.system('mkdir -p ' + save_dir)
+for i, anns_dict in enumerate(data):
+    inputs = anns_dict['anns_loaded'][0].to(device)
+    labels = anns_dict['anns_labels'][0].to(device)
+    with torch.no_grad():
+        if opt.net == 'efficientnet':
+            outputs = model.extract_features(inputs)
+        else:
+            outputs = model(inputs).squeeze(-1).squeeze(-1)
+    # save features, corresponding labels and annotation location info
+    outputs = outputs.detach().cpu().tolist()
+    labels = labels.detach().cpu().numpy()
+    with open(os.path.join(save_dir, anns_dict['feat_save_path'][0]), 'w') as fp:
+        json.dump(outputs, fp)
+    fp.close()
+    np.save(os.path.join(save_dir, anns_dict['anns_save_path'][0]), labels)
+    with open(os.path.join(save_dir, anns_dict['anno_loc_path'][0]), 'w') as fp:
+        json.dump(anns_dict['anno_loc'], fp)
+    fp.close()
+    del inputs, outputs, labels
+    gc.collect()
 print(str_verbose, "{} feature extraction finished!".format(opt.source))

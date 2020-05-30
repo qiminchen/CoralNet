@@ -5,3 +5,5 @@ __pycache__
 data_analysis/.ipynb_checkpoints/crop_image-checkpoint.ipynb
 data_analysis/.ipynb_checkpoints/data_analysis-checkpoint.ipynb
 data_analysis/.~lock.train_evaluate_sets.csv#
+.ipynb_checkpoints
+.~lock.train_evaluate_sets.csv#
