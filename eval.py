@@ -9,6 +9,7 @@ import pickle
 import pandas as pd
 from sklearn.linear_model import SGDClassifier
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.utils.class_weight import compute_sample_weight
 from util.util_print import str_stage, plot_cm, plot_refacc, get_classification_report
 
 
@@ -19,18 +20,21 @@ parser.add_argument('--epochs', type=int, help='Number of epoch for training')
 parser.add_argument('--outdir', type=str, help='Output directory')
 parser.add_argument('--loss', type=str, help='The loss function to be used'
                                              'hinge gives a linear SVM, log gives a logistic regression')
+parser.add_argument('--weighted', type=int, default=0,
+                    help='Apply weights to individual samples.')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
 
 
-def train_classifier(source, epoch, data_root, loss):
+def train_classifier(source, epoch, data_root, loss, weighted):
     """
     Main function to train and evaluate the classifier
     :param source: source to be evaluated
     :param epoch: number of epoch for training
     :param data_root: data root directory
     :param loss: the loss function to be used
+    :param weighted: whether to use class weights or not
     :return: gt, pred, classes, classes_dict, clf, stat
     """
     print(str_stage, "Setting up for {}".format(data_root.split('/')[-1]))
@@ -56,11 +60,16 @@ def train_classifier(source, epoch, data_root, loss):
     classes = list(set(backend_classes).intersection(classes))
     classes_dict = {classes[i]: i for i in range(len(classes))}
 
+    # Class weight and sample weight
+    with open(os.path.join('/mnt/sda/features/status', source, 'class_weight.json'), 'r') as f:
+        classes_weight = json.load(f)
+    classes_weight = {classes_dict[int(k)]: v for k, v in classes_weight.items()}
+
     # Train a classifier
     #
     start_time = time.time()
-    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch,
-                                   classes, classes_dict, data_root, loss)
+    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes,
+                                   classes_dict, classes_weight, data_root, loss, weighted)
     if not ok:
         return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     runtime = time.time() - start_time
@@ -73,7 +82,8 @@ def train_classifier(source, epoch, data_root, loss):
     return gt, pred, classes, classes_dict, clf, stat
 
 
-def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, data_root, loss):
+def _do_training(source, train_list, ref_list, epochs, classes,
+                 classes_dict, classes_weight, data_root, loss, weighted):
     """
     Function to train and calibrate the classifier
     :param source: source to be evaluated
@@ -82,7 +92,10 @@ def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, da
     :param epochs: number of epoch for training
     :param classes: classes to be used
     :param classes_dict: classes dictionary to be used
+    :param classes_weight: class weight for data balance
     :param data_root: data root directory
+    :param loss: the loss function to be used
+    :param weighted: whether to use class weights or not
     :return: True, calibrated classifier and training accuracy
     """
 
@@ -104,7 +117,15 @@ def _do_training(source, train_list, ref_list, epochs, classes, classes_dict, da
         mini_batches = _chunkify(train_list, n)
         for mb in mini_batches:
             x, y = _load_mini_batch(source, mb, classes, classes_dict, data_root)
-            clf.partial_fit(x, y, classes=unique_class)
+            if weighted:
+                current_classes = list(set(y))
+                current_classes_weight = {
+                    k: v for k, v in classes_weight.items() if k in current_classes
+                }
+                sample_weight = compute_sample_weight(current_classes_weight, y)
+            else:
+                sample_weight = None
+            clf.partial_fit(x, y, classes=unique_class, sample_weight=sample_weight)
         refacc.append(_acc(y_ref, clf.predict(x_ref)))
 
     # Calibrate classifier
@@ -280,7 +301,9 @@ def _acc(gts, preds):
 
 # gt, pred, cls, status = train_classifier(args.source, args.epochs)
 try:
-    gt, pred, cls, cls_dict, clf, status = train_classifier(args.source, args.epochs, args.data_root, args.loss)
+    gt, pred, cls, cls_dict, clf, status = train_classifier(
+        args.source, args.epochs, args.data_root, args.loss, args.weighted
+    )
 except Exception as e:
     gt, pred, cls, cls_dict, clf, status = 0, 0, 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     print("Failed to train source: {}, {}".format(args.source, e))
