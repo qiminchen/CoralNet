@@ -8,8 +8,9 @@ import numpy as np
 import pickle
 import pandas as pd
 from sklearn.linear_model import SGDClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.utils.class_weight import compute_sample_weight
 from util.util_print import str_stage, plot_cm, plot_refacc, get_classification_report
 
 
@@ -18,23 +19,20 @@ parser.add_argument('source', type=str, help='Source to be evaluated')
 parser.add_argument('--data_root', type=str, help='Path to the data root')
 parser.add_argument('--epochs', type=int, help='Number of epoch for training')
 parser.add_argument('--outdir', type=str, help='Output directory')
-parser.add_argument('--loss', type=str, help='The loss function to be used'
-                                             'hinge gives a linear SVM, log gives a logistic regression')
-parser.add_argument('--weighted', type=int, default=0,
-                    help='Apply weights to individual samples.')
+parser.add_argument('--clf_method', type=str, default='lr',
+                    help='lr: Logistic Regression, lsvm: Linear SVM, rf: Random Forest')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
 
 
-def train_classifier(source, epoch, data_root, loss, weighted):
+def train_classifier(source, epoch, data_root, clf_method):
     """
     Main function to train and evaluate the classifier
     :param source: source to be evaluated
     :param epoch: number of epoch for training
     :param data_root: data root directory
-    :param loss: the loss function to be used
-    :param weighted: whether to use class weights or not
+    :param clf_method: classification method
     :return: gt, pred, classes, classes_dict, clf, stat
     """
     print(str_stage, "Setting up for {}".format(data_root.split('/')[-1]))
@@ -60,16 +58,14 @@ def train_classifier(source, epoch, data_root, loss, weighted):
     classes = list(set(backend_classes).intersection(classes))
     classes_dict = {classes[i]: i for i in range(len(classes))}
 
-    # Class weight and sample weight
-    with open(os.path.join('/mnt/sda/features/status', source, 'class_weight.json'), 'r') as f:
-        classes_weight = json.load(f)
-    classes_weight = {classes_dict[int(k)]: v for k, v in classes_weight.items()}
-
     # Train a classifier
     #
     start_time = time.time()
-    ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes,
-                                   classes_dict, classes_weight, data_root, loss, weighted)
+    if clf_method in ['lr', 'lsvm', 'rf', 'gnb']:
+        ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes,
+                                       classes_dict, data_root, clf_method)
+    else:
+        raise NotImplementedError(clf_method)
     if not ok:
         return {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
     runtime = time.time() - start_time
@@ -83,7 +79,7 @@ def train_classifier(source, epoch, data_root, loss, weighted):
 
 
 def _do_training(source, train_list, ref_list, epochs, classes,
-                 classes_dict, classes_weight, data_root, loss, weighted):
+                 classes_dict, data_root, clf_method):
     """
     Function to train and calibrate the classifier
     :param source: source to be evaluated
@@ -92,10 +88,7 @@ def _do_training(source, train_list, ref_list, epochs, classes,
     :param epochs: number of epoch for training
     :param classes: classes to be used
     :param classes_dict: classes dictionary to be used
-    :param classes_weight: class weight for data balance
     :param data_root: data root directory
-    :param loss: the loss function to be used
-    :param weighted: whether to use class weights or not
     :return: True, calibrated classifier and training accuracy
     """
 
@@ -110,22 +103,33 @@ def _do_training(source, train_list, ref_list, epochs, classes,
     x_ref, y_ref = _load_mini_batch(source, ref_list, classes, classes_dict, data_root)
 
     # Initialize classifier and refset accuracy list
-    clf = SGDClassifier(loss=loss, average=True)
+    if clf_method == 'log':
+        clf = SGDClassifier(loss='log', average=True)
+    elif clf_method == 'lsvm':
+        clf = SGDClassifier(loss='hinge', average=True)
+    elif clf_method == 'rf':
+        clf = RandomForestClassifier(warm_start=True, n_estimators=30, n_jobs=-1)
+        with open(os.path.join('/mnt/sda/features/gamma/effnetb0_rf_4eps',
+                               source, 'i000000.features.json'), 'r') as f:
+            xrf = json.load(f)
+        yrf = list(np.load(os.path.join('/mnt/sda/features/gamma/effnetb0_rf_4eps',
+                                        source, 'i000000.features.anns.npy')))
+        yrf = [classes_dict[i] for i in yrf]
+    else:
+        clf = GaussianNB()
     refacc = []
     for epoch in range(epochs):
         random.shuffle(train_list)
         mini_batches = _chunkify(train_list, n)
         for mb in mini_batches:
             x, y = _load_mini_batch(source, mb, classes, classes_dict, data_root)
-            if weighted:
-                current_classes = list(set(y))
-                current_classes_weight = {
-                    k: v for k, v in classes_weight.items() if k in current_classes
-                }
-                sample_weight = compute_sample_weight(current_classes_weight, y)
+            if clf_method == 'rf':
+                x.extend(xrf)
+                y.extend(yrf)
+                clf.fit(x, y)
+                clf.n_estimators += 30
             else:
-                sample_weight = None
-            clf.partial_fit(x, y, classes=unique_class, sample_weight=sample_weight)
+                clf.partial_fit(x, y, classes=unique_class)
         refacc.append(_acc(y_ref, clf.predict(x_ref)))
 
     # Calibrate classifier
@@ -133,6 +137,10 @@ def _do_training(source, train_list, ref_list, epochs, classes,
     clf_calibrated.fit(x_ref, y_ref)
 
     return True, clf_calibrated, refacc
+
+
+def _train_naive_bayes():
+    pass
 
 
 def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root):
@@ -302,7 +310,7 @@ def _acc(gts, preds):
 # gt, pred, cls, status = train_classifier(args.source, args.epochs)
 try:
     gt, pred, cls, cls_dict, clf, status = train_classifier(
-        args.source, args.epochs, args.data_root, args.loss, args.weighted
+        args.source, args.epochs, args.data_root, args.clf_method
     )
 except Exception as e:
     gt, pred, cls, cls_dict, clf, status = 0, 0, 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
