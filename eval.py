@@ -11,7 +11,8 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.calibration import CalibratedClassifierCV
-from util.util_print import str_stage, plot_cm, plot_refacc, get_classification_report
+from sklearn.neural_network import MLPClassifier
+from util.util_print import str_stage, plot_cm, plot_trainloss_refacc, get_classification_report
 
 
 parser = argparse.ArgumentParser(description='Train Logistic Regression classifier')
@@ -20,7 +21,8 @@ parser.add_argument('--data_root', type=str, help='Path to the data root')
 parser.add_argument('--epochs', type=int, help='Number of epoch for training')
 parser.add_argument('--outdir', type=str, help='Output directory')
 parser.add_argument('--clf_method', type=str, default='lr',
-                    help='lr: Logistic Regression, lsvm: Linear SVM, rf: Random Forest')
+                    help='lr: Logistic Regression, lsvm: Linear SVM, rf: Random Forest'
+                         'mlp: Multi-layer Perceptron classifier')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
@@ -52,7 +54,7 @@ def train_classifier(source, epoch, data_root, clf_method):
 
     # Identify classes common to both train and test. This will be our labelset for the training.
     #
-    classes = _get_classes(source, train_list, ref_list, test_list, data_root)
+    classes, total_patches = _get_classes(source, train_list, ref_list, test_list, data_root)
     with open(os.path.join('/mnt/sda/features/status', source, 'labels.json'), 'r') as f:
         backend_classes = json.load(f)
     classes = list(set(backend_classes).intersection(classes))
@@ -61,9 +63,9 @@ def train_classifier(source, epoch, data_root, clf_method):
     # Train a classifier
     #
     start_time = time.time()
-    if clf_method in ['lr', 'lsvm', 'rf', 'gnb']:
-        ok, clf, refacc = _do_training(source, train_list, ref_list, epoch, classes,
-                                       classes_dict, data_root, clf_method)
+    if clf_method in ['lr', 'lsvm', 'rf', 'gnb', 'mlp']:
+        ok, clf, refacc, train_loss = _do_training(source, train_list, ref_list, epoch, classes,
+                                                   classes_dict, data_root, clf_method, total_patches)
     else:
         raise NotImplementedError(clf_method)
     if not ok:
@@ -73,13 +75,13 @@ def train_classifier(source, epoch, data_root, clf_method):
     # Evaluate trained classifier
     #
     gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root)
-    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': np.mean(valacc)}
+    stat = {'ok': True, 'runtime': runtime, 'train_loss': train_loss, 'refacc': refacc, 'acc': np.mean(valacc)}
 
     return gt, pred, classes, classes_dict, clf, stat
 
 
 def _do_training(source, train_list, ref_list, epochs, classes,
-                 classes_dict, data_root, clf_method):
+                 classes_dict, data_root, clf_method, total_patches):
     """
     Function to train and calibrate the classifier
     :param source: source to be evaluated
@@ -115,8 +117,14 @@ def _do_training(source, train_list, ref_list, epochs, classes,
         yrf = list(np.load(os.path.join('/mnt/sda/features/gamma/effnetb0_rf_4eps',
                                         source, 'i000000.features.anns.npy')))
         yrf = [classes_dict[i] for i in yrf]
-    else:
+    elif clf_method == 'gnb':
         clf = GaussianNB()
+    else:
+        if total_patches <= 10000:
+            hls, lr = 200, 1e-3
+        else:
+            hls, lr = (200, 100), 1e-4
+        clf = MLPClassifier(hidden_layer_sizes=hls, learning_rate_init=lr)
     refacc = []
     for epoch in range(epochs):
         random.shuffle(train_list)
@@ -131,16 +139,12 @@ def _do_training(source, train_list, ref_list, epochs, classes,
             else:
                 clf.partial_fit(x, y, classes=unique_class)
         refacc.append(_acc(y_ref, clf.predict(x_ref)))
-
+    train_loss = clf.loss_curve_
     # Calibrate classifier
     clf_calibrated = CalibratedClassifierCV(clf, cv='prefit')
     clf_calibrated.fit(x_ref, y_ref)
 
-    return True, clf_calibrated, refacc
-
-
-def _train_naive_bayes():
-    pass
+    return True, clf_calibrated, refacc, train_loss
 
 
 def _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root):
@@ -253,7 +257,8 @@ def _get_classes(source, train_list, ref_list, test_list, data_root):
     y_test_classes = read(test_list)
     classes = list(set(y_test_classes).intersection(
         set(y_train_classes), set(y_ref_classes)))
-    return classes
+    total_patches = len(y_train_classes) + len(y_ref_classes)
+    return classes, total_patches
 
 
 def _get_lists(source, data_root):
@@ -332,7 +337,8 @@ with open(os.path.join(save_dir, 'classifier.pkl'), 'wb') as f:
     pickle.dump(clf, f)
 print('{} training completed!'.format(args.source))
 # Plot training loss
-plot_refacc(save_dir)
+plot_trainloss_refacc(save_dir, 'train_loss')
+plot_trainloss_refacc(save_dir, 'refacc')
 # Plot confusion matrix
 plot_cm(filename=os.path.join(save_dir, 'output.npz'), save_path=save_dir)
 # Export classification report to .json
