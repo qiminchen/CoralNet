@@ -94,8 +94,11 @@ def _do_training(source, train_list, ref_list, epochs, classes,
     :return: True, calibrated classifier and training accuracy
     """
 
+    # Figure out # patches per image
+    nbr_patch_per_image = len(np.load(os.path.join(data_root, source, train_list[0] + '.features.anns.npy')))
     # Figure out # images per mini-batch and batches per epoch.
-    batch_size = min(len(train_list), 300)
+    batch_size = min(len(train_list), int(100000/nbr_patch_per_image))
+    # batch_size = min(len(train_list), 300)
     n = int(np.ceil(len(train_list) / float(batch_size)))
     unique_class = list(range(len(classes)))
     print(str_stage, "Start training {} with {} epochs: number of images: {}, number of batch: {}, classes: {}".format(
@@ -120,17 +123,17 @@ def _do_training(source, train_list, ref_list, epochs, classes,
     elif clf_method == 'gnb':
         clf = GaussianNB()
     else:
-        if total_patches <= 10000:
-            hls, lr = 200, 1e-3
-        else:
-            hls, lr = (200, 100), 1e-4
-        clf = MLPClassifier(hidden_layer_sizes=hls, learning_rate_init=lr)
+        hls = 200 if total_patches <= 10000 else (200, 100)
+        clf = MLPClassifier(hidden_layer_sizes=hls, learning_rate_init=1e-4)
+
     refacc = []
     for epoch in range(epochs):
         random.shuffle(train_list)
         mini_batches = _chunkify(train_list, n)
         for mb in mini_batches:
             x, y = _load_mini_batch(source, mb, classes, classes_dict, data_root)
+            # Make sure that each label has at least one sample in every mini-batch
+            # Otherwise random forest would fail
             if clf_method == 'rf':
                 x.extend(xrf)
                 y.extend(yrf)
@@ -313,14 +316,17 @@ def _acc(gts, preds):
 
 
 # gt, pred, cls, status = train_classifier(args.source, args.epochs)
-try:
-    gt, pred, cls, cls_dict, clf, status = train_classifier(
+# try:
+#     gt, pred, cls, cls_dict, clf, status = train_classifier(
+#         args.source, args.epochs, args.data_root, args.clf_method
+#     )
+# except Exception as e:
+#     gt, pred, cls, cls_dict, clf, status = 0, 0, 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
+#     print("Failed to train source: {}, {}".format(args.source, e))
+#     exit(1)
+gt, pred, cls, cls_dict, clf, status = train_classifier(
         args.source, args.epochs, args.data_root, args.clf_method
     )
-except Exception as e:
-    gt, pred, cls, cls_dict, clf, status = 0, 0, 0, 0, 0, {'ok': False, 'runtime': 0, 'refacc': 0, 'acc': 0}
-    print("Failed to train source: {}, {}".format(args.source, e))
-    exit(1)
 
 # Create save dir if not exist
 save_dir = os.path.join(args.outdir, args.source)
