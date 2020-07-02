@@ -194,9 +194,11 @@ running_loss = 0.0
 running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
+    # Manually adjust the learning rate if using adam
     # Double-check the learning rate
-    for param_group in optimizer.param_groups:
-        assert param_group['lr'] == opt.lr * opt.lrdecay
+    if opt.optim == 'adam':
+        for param_group in optimizer.param_groups:
+            assert param_group['lr'] == opt.lr * opt.lrdecay
     # Re-sampling the dataset, test set will remain the same
     if opt.augmented:
         del dataloaders

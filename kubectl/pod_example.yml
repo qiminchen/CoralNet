@@ -19,7 +19,7 @@ spec:
   containers:
   - name: gpu-container
     # Use image from DockerHub as below since it is more stable.
-    image: liam951120/coralnet:latest
+    image: liam951120/coralnet:coralnet
     args: ["sleep", "infinity"]
     volumeMounts:
     - mountPath: /qic003
