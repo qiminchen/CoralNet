@@ -11,7 +11,7 @@ import datasets
 import models
 import loggers.loggers as logger
 import util.util_metric as util_metric
-from datasets.coralnet_augmentation_nautilus import collate_data
+from datasets.coralnet_nautilus import collate_data
 from util.util_augmentation import dataset_sampling
 from util.util_print import str_error, str_stage, str_verbose, str_warning
 
@@ -101,16 +101,7 @@ model = model.to(device)
 
 ###################################################
 
-print(str_stage, "Setting up optimizer")
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum,
-                            weight_decay=opt.wdecay)
-# optimizer = torch.optim.Adam(model.parameters(), opt.lr, betas=(opt.adam_beta1, opt.adam_beta2),
-#                              weight_decay=opt.wdecay)
-
-###################################################
-
-print(str_stage, "Setting up data loaders and learning rate scheduler")
+print(str_stage, "Setting up dataset data loaders")
 start_time = time.time()
 Dataset = datasets.get_dataset(opt.dataset)
 dataset = {
@@ -127,8 +118,21 @@ print(str_verbose, "# training points: " + str(len(dataset['train'])))
 print(str_verbose, "# training batches per epoch: " + str(len(dataloaders['train'])))
 print(str_verbose, "# test batches: " + str(len(dataloaders['valid'])))
 
-lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=opt.max_lr, epochs=opt.epoch,
-                                                   steps_per_epoch=len(dataloaders['train']))
+###################################################
+
+print(str_stage, "Setting up optimizer and learning rate scheduler")
+criterion = nn.CrossEntropyLoss()
+if opt.optim == 'sgd':
+    optimizer = torch.optim.SGD(model.parameters(), lr=opt.lr, momentum=opt.momentum,
+                                weight_decay=opt.wdecay)
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=opt.max_lr, epochs=opt.epoch,
+                                                       steps_per_epoch=len(dataloaders['train']))
+elif opt.optim == 'adam':
+    optimizer = torch.optim.Adam(model.parameters(), opt.lr*opt.lrdecay, betas=(opt.adam_beta1, opt.adam_beta2),
+                                 weight_decay=opt.wdecay)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lrdecaystep)
+else:
+    raise ModuleNotFoundError(opt.optim)
 
 ###################################################
 
@@ -156,8 +160,11 @@ else:
     else:
         checkpoint, additional_values = model_logger.load_state_dict(net_filename)
         model.load_state_dict(checkpoint['net'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['scheduler'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        if opt.optim == 'adam':
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = opt.lr * opt.lrdecay
         try:
             csv_log = pd.read_csv(os.path.join(logdir, 'epoch_loss.csv'))
             initial_epoch = (csv_log['epoch'].max() + 1) if csv_log['phase'].tail(1).values[0] == 'valid' \
@@ -187,8 +194,12 @@ running_loss = 0.0
 running_accuracy = 0.0
 
 while initial_epoch <= opt.epoch:
+    # Double-check the learning rate
+    for param_group in optimizer.param_groups:
+        assert param_group['lr'] == opt.lr * opt.lrdecay
     # Re-sampling the dataset, test set will remain the same
     if opt.augmented:
+        del dataloaders
         _, dataloaders = dataset_sampling(dataset, opt, collate_data)
     for phase in ['train', 'valid']:
         # Skip training phase one time if current phase is supposed to be valid
@@ -229,7 +240,8 @@ while initial_epoch <= opt.epoch:
                 batch_losses, batch_accs = 0, 0
                 # save most recent model as checkpoint
                 checkpoint = copy.deepcopy(model.state_dict())
-                model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler, filename='checkpoint.pt',
+                model_logger.save_state_dict(checkpoint, optimizer, lr_scheduler,
+                                             filename='checkpoint_mb'+str(i+1)+'.pt',
                                              additional_values={'epoch': initial_epoch})
             del inputs, labels
         if dataloader_len % opt.log_batch != 0:
