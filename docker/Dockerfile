@@ -42,7 +42,7 @@ RUN apt-get update -y \
  && apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev
 
 # Install Miniconda
-RUN curl -so /miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+RUN curl -so /miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
  && chmod +x /miniconda.sh \
  && /miniconda.sh -b -p /miniconda \
  && rm /miniconda.sh
@@ -78,12 +78,8 @@ ARG git_personal_token
 RUN git clone https://${git_personal_token}@github.com/qiminchen/CoralNet.git \
  && mkdir ~/.aws \
  && cd CoralNet \
- && cp credentials ~/.aws/credentials \
  && conda env create -f environment.yml \
- && source ../miniconda/etc/profile.d/conda.sh \
- && conda activate coralnet \
- && aws configure set plugins.endpoint awscli_plugin_endpoint \
- && aws configure set s3api.endpoint_url https://s3.nautilus.optiputer.net \
- && aws configure set s3.endpoint_url https://s3.nautilus.optiputer.net
+ && cd .. \
+ && rm -r CoralNet
 
-WORKDIR /CoralNet
+WORKDIR /
