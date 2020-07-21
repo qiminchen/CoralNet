@@ -67,7 +67,7 @@ def run_training(data_root, source, epochs, outdir):
                 data_root, source, train, ref, epochs, classes, classes_dict, clf
             )
             gt, pred, valacc = _evaluate_classifier(source, clf, test, classes, classes_dict, data_root)
-            runtime = start_time - time.time()
+            runtime = time.time() - start_time
             stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': np.mean(valacc)}
             log_save_dir = os.path.join(outdir, num_string, source, 'log', str(i+1))
             _visualization(log_save_dir, clf, stat, gt, pred, classes, classes_dict)
@@ -81,7 +81,7 @@ def run_training(data_root, source, epochs, outdir):
                     data_root, source, train, ref, epochs, classes, classes_dict, clf
                 )
                 gt, pred, valacc = _evaluate_classifier(source, clf, test, classes, classes_dict, data_root)
-                runtime = start_time - time.time()
+                runtime = time.time() - start_time
                 stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': np.mean(valacc)}
                 mlp_save_dir = os.path.join(
                     outdir, num_string, source, 'mlp', '_'.join(['_'.join([str(i) for i in hls]),
@@ -89,6 +89,63 @@ def run_training(data_root, source, epochs, outdir):
                 )
                 _visualization(mlp_save_dir, clf, stat, gt, pred, classes, classes_dict)
                 print("[hidden layer size: {}, learning rate: {}] done".format(hls, lr))
+
+    return True
+
+
+def run_training_imall(data_root, source, epochs, outdir):
+
+    source_path = os.path.join('/mnt/sda/features/status', source)
+    with open(os.path.join(source_path, 'train_list.txt'), 'r') as file:
+        line = file.read()
+    train_list = line.split('\n')
+    with open(os.path.join(source_path, 'ref_list.txt'), 'r') as file:
+        line = file.read()
+    ref_list = line.split('\n')
+    with open(os.path.join(source_path, 'test_list.txt'), 'r') as file:
+        line = file.read()
+    test_list = line.split('\n')
+    with open(os.path.join(source_path, 'labels.json'), 'r') as f:
+        backend_classes = json.load(f)
+
+    hidden_layer_size = [(10,), (20,), (50,), (100,), (200,), (200, 100)]
+    learning_rate = [1e-3, 1e-4, 1e-5]
+    hls_lr = [(i, j) for i in hidden_layer_size for j in learning_rate]
+
+    classes, _ = _get_classes(source, train_list, ref_list, test_list, data_root)
+    classes = list(set(backend_classes).intersection(classes))
+    classes_dict = {classes[i]: i for i in range(len(classes))}
+
+    # train LR
+    print("====> Training Logistic Regression...")
+    start_time = time.time()
+    clf = SGDClassifier(loss='log', average=True)
+    ok, clf, refacc = _do_training(
+        data_root, source, train_list, ref_list, epochs, classes, classes_dict, clf
+    )
+    gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root)
+    runtime = time.time() - start_time
+    stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': np.mean(valacc)}
+    log_save_dir = os.path.join(outdir, 'imall', source, 'log', '1')
+    _visualization(log_save_dir, clf, stat, gt, pred, classes, classes_dict)
+
+    # train MLP with different hyper-parameter setups
+    print("====> Training Multi-Layer Perceptron...")
+    for hls, lr in hls_lr:
+        start_time = time.time()
+        clf = MLPClassifier(hidden_layer_sizes=hls, learning_rate_init=lr)
+        ok, clf, refacc = _do_training(
+            data_root, source, train_list, ref_list, epochs, classes, classes_dict, clf
+        )
+        gt, pred, valacc = _evaluate_classifier(source, clf, test_list, classes, classes_dict, data_root)
+        runtime = time.time() - start_time
+        stat = {'ok': True, 'runtime': runtime, 'refacc': refacc, 'acc': np.mean(valacc)}
+        mlp_save_dir = os.path.join(
+            outdir, 'imall', source, 'mlp', '_'.join(['_'.join([str(i) for i in hls]),
+                                                         format(lr, '.0e')]), '1'
+        )
+        _visualization(mlp_save_dir, clf, stat, gt, pred, classes, classes_dict)
+        print("[hidden layer size: {}, learning rate: {}] done".format(hls, lr))
 
     return True
 
@@ -141,4 +198,5 @@ def _visualization(save_dir, clf, status, gt, pred, cls, cls_dict):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    done = run_training(args.data_root, args.source, args.epochs, args.outdir)
+    _ = run_training(args.data_root, args.source, args.epochs, args.outdir)
+    _ = run_training_imall(args.data_root, args.source, args.epochs, args.outdir)
